@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsDateString, IsInt } from 'class-validator';
+import { IsString, IsInt, IsDateString, IsOptional } from 'class-validator';
 export class CreateProjectDto {
     @IsString()
     nome: string;
@@ -10,10 +10,10 @@ export class CreateProjectDto {
     tenant: string;
 
     @IsDateString()
-    inicio: string;
+    dataInicio: string;
 
     @IsString()
-    userProp: string;
+    usuarioProprietario: string;
 
     @IsString()
     status: string;
