@@ -13,9 +13,10 @@ import { GroupUserModule } from './group-user/group-user.module';
 import { GroupAlertModule } from './group-alert/group-alert.module';
 import { InfraAlertModule } from './infra-alert/infra-alert.module';
 import { AppAlertModule } from './app-alert/app-alert.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, InfraAlertModule, AppAlertModule],
+  imports: [ContactsModule, WhatsappModule, EmailModule, ProjectsModule, ServersModule, CompanyModule, UserModule, GroupModule, GroupUserModule, GroupAlertModule, InfraAlertModule, AppAlertModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
