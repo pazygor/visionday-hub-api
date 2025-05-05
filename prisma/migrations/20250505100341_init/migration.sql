@@ -96,39 +96,48 @@ CREATE TABLE `grupo_usuario` (
 CREATE TABLE `grupo_alerta` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `grupo_id` INTEGER NOT NULL,
-    `alerta_infra_id` INTEGER NULL,
-    `alerta_app_id` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `alerta_infra` (
+CREATE TABLE `alerta_parametro_app` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `descricao` VARCHAR(191) NOT NULL,
-    `data_hora` DATETIME(3) NOT NULL,
     `servidorId` INTEGER NOT NULL,
+    `cpu` INTEGER NULL,
+    `saturation` BOOLEAN NULL,
+    `linux_memory` INTEGER NULL,
+    `windows_memory` INTEGER NULL,
+    `disk_latency` INTEGER NULL,
+    `disk_queue` INTEGER NULL,
+    `disk_partition` INTEGER NULL,
+    `network_packets` BIGINT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `alerta_app` (
+CREATE TABLE `alerta_parametro_infra` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `descricao` VARCHAR(191) NOT NULL,
-    `data_hora` DATETIME(3) NOT NULL,
     `servidorId` INTEGER NOT NULL,
+    `cpu` INTEGER NULL,
+    `memoria` INTEGER NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `contato` (
+CREATE TABLE `alerta_usuario` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `nome` VARCHAR(191) NOT NULL,
-    `email` VARCHAR(191) NOT NULL,
-    `telefone` VARCHAR(191) NOT NULL,
     `servidorId` INTEGER NOT NULL,
+    `contato` VARCHAR(191) NOT NULL,
+    `grupo` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -155,16 +164,10 @@ ALTER TABLE `grupo_usuario` ADD CONSTRAINT `grupo_usuario_grupo_id_fkey` FOREIGN
 ALTER TABLE `grupo_alerta` ADD CONSTRAINT `grupo_alerta_grupo_id_fkey` FOREIGN KEY (`grupo_id`) REFERENCES `grupo`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `grupo_alerta` ADD CONSTRAINT `grupo_alerta_alerta_infra_id_fkey` FOREIGN KEY (`alerta_infra_id`) REFERENCES `alerta_infra`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `alerta_parametro_app` ADD CONSTRAINT `alerta_parametro_app_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `grupo_alerta` ADD CONSTRAINT `grupo_alerta_alerta_app_id_fkey` FOREIGN KEY (`alerta_app_id`) REFERENCES `alerta_app`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `alerta_parametro_infra` ADD CONSTRAINT `alerta_parametro_infra_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `alerta_infra` ADD CONSTRAINT `alerta_infra_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `alerta_app` ADD CONSTRAINT `alerta_app_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `contato` ADD CONSTRAINT `contato_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `alerta_usuario` ADD CONSTRAINT `alerta_usuario_servidorId_fkey` FOREIGN KEY (`servidorId`) REFERENCES `servidor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

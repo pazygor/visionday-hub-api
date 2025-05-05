@@ -70,34 +70,35 @@ model Servidor {
   empresaId            Int           @map("empresa_id")
   empresa              Empresa       @relation("EmpresaServidores", fields: [empresaId], references: [id], onDelete: Cascade)
 
-  alertasInfra AlertaInfra[] @relation("ServidorAlertasInfra")
-  alertasApp   AlertaApp[]   @relation("ServidorAlertasApp")
-  contatos     Contato[]     @relation("ServidorContatos")
+  parametrosApp   AlertaParametroApp[]   @relation("ServidorAlertaParametroApp")
+  parametrosInfra AlertaParametroInfra[] @relation("ServidorAlertaParametroInfra")
+  usuariosAlerta  AlertaUsuario[]        @relation("ServidorAlertaUsuario")
 
   @@map("servidor")
 }
 
 model Usuario {
-  id          Int       @id @default(autoincrement()) @map("id")
-  empresaId   Int       @map("empresa")
-  nome        String    @map("nome")
-  senha       String    @map("senha")
-  email       String    @unique @map("email")
-  imagem      String?   @map("imagem")
-  permissao   Int?      @map("permissao")
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  token       String?   @map("token")
-  ativo       Boolean   @default(true) @map("ativo")
-  loginAtivo  Boolean?  @map("login_ativo")
-  motivo      String?   @map("motivo")
-  validade    DateTime? @map("validade")
-  perfil      Int?      @map("perfil")
-  celular     String?   @map("celular")
-  cadastro    Int?      @map("cadastro")
+  id             Int               @id @default(autoincrement()) @map("id")
+  empresaId      Int               @map("empresa")
+  nome           String            @map("nome")
+  senha          String            @map("senha")
+  email          String            @unique @map("email")
+  imagem         String?           @map("imagem")
+  permissao      Int?              @map("permissao")
+  updatedAt      DateTime          @default(now()) @updatedAt @map("updated_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  token          String?           @map("token")
+  ativo          Boolean           @default(true) @map("ativo")
+  loginAtivo     Boolean?          @map("login_ativo")
+  motivo         String?           @map("motivo")
+  validade       DateTime?         @map("validade")
+  perfil         Int?              @map("perfil")
+  celular        String?           @map("celular")
+  cadastro       Int?              @map("cadastro")
 
-  empresa     Empresa   @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
-  grupoUsuarios GrupoUsuario[] @relation("GrupoUsuarios")
+  empresa        Empresa           @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
+  grupoUsuarios  GrupoUsuario[]    @relation("GrupoUsuarios")
+
   @@map("usuarios")
 }
 model Grupo {
@@ -124,41 +125,55 @@ model GrupoAlerta {
   id             Int           @id @default(autoincrement()) @map("id")
   grupoId        Int           @map("grupo_id")
   grupo          Grupo         @relation("GrupoAlertas", fields: [grupoId], references: [id], onDelete: Cascade)
-  alertaInfraId  Int?          @map("alerta_infra_id")
-  alertaAppId    Int?          @map("alerta_app_id")
-  alertaInfra    AlertaInfra?  @relation("AlertaInfraGrupoAlertas", fields: [alertaInfraId], references: [id], onDelete: Cascade)
-  alertaApp      AlertaApp?    @relation("AlertaAppGrupoAlertas", fields: [alertaAppId], references: [id], onDelete: Cascade)
 
   @@map("grupo_alerta")
 }
 
-model AlertaInfra {
-  id           Int      @id @default(autoincrement()) @map("id")
-  descricao    String   @map("descricao")
-  dataHora     DateTime @map("data_hora")
-  servidorId   Int
-  servidor     Servidor @relation("ServidorAlertasInfra", fields: [servidorId], references: [id], onDelete: Cascade)
-  grupoAlertas GrupoAlerta[] @relation("AlertaInfraGrupoAlertas")
-  @@map("alerta_infra")
+model AlertaParametroApp {
+  id               Int       @id @default(autoincrement())
+  servidorId       Int
+
+  cpu              Int?
+  saturation       Boolean?
+  linux_memory     Int?
+  windows_memory   Int?
+  disk_latency     Int?
+  disk_queue       Int?
+  disk_partition   Int?
+  network_packets  BigInt?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  servidor     Servidor  @relation("ServidorAlertaParametroApp", fields: [servidorId], references: [id], onDelete: Cascade)
+
+  @@map("alerta_parametro_app")
 }
 
-model AlertaApp {
-  id           Int      @id @default(autoincrement()) @map("id")
-  descricao    String   @map("descricao")
-  dataHora     DateTime @map("data_hora")
-  servidorId   Int
-  servidor     Servidor @relation("ServidorAlertasApp", fields: [servidorId], references: [id], onDelete: Cascade)
-  grupoAlertas GrupoAlerta[] @relation("AlertaAppGrupoAlertas")
-  @@map("alerta_app")
+model AlertaParametroInfra {
+  id               Int       @id @default(autoincrement())
+  servidorId       Int
+  cpu              Int?      // % de CPU geral
+  memoria          Int?      // % de memória RAM geral
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  servidor     Servidor  @relation("ServidorAlertaParametroInfra", fields: [servidorId], references: [id], onDelete: Cascade)
+
+  @@map("alerta_parametro_infra")
+  
 }
 
-model Contato {
-  id           Int      @id @default(autoincrement()) @map("id")
-  nome         String   @map("nome")
-  email        String   @map("email")
-  telefone     String   @map("telefone")
+model AlertaUsuario {
+  id           Int       @id @default(autoincrement())
   servidorId   Int
-  servidor     Servidor @relation("ServidorContatos", fields: [servidorId], references: [id], onDelete: Cascade)
+  contato      String    // Email ou Telefone
+  grupo        String    // Ex: 'Infraestrutura', 'Aplicações', 'Banco de Dados', 'Geral'
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  @@map("contato")
+  servidor     Servidor  @relation("ServidorAlertaUsuario", fields: [servidorId], references: [id], onDelete: Cascade)
+  
+
+  @@map("alerta_usuario")
 }
