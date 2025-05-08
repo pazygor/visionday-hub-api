@@ -28,14 +28,14 @@ model Empresa {
   horaAdesao       DateTime    @db.Time(0) @map("hora_adesao")
   tenant           String      @map("tenant")
   env              String      @map("env")
-  modoContratado   String      @db.VarChar(20) @map("modo_contratado")
   limiteProjetos   Int         @default(0) @map("limite_projetos")
   limiteServidores Int         @default(0) @map("limite_servidores")
 
   usuarios   Usuario[] @relation("EmpresaUsuarios")
   projetos   Projeto[] @relation("EmpresaProjetos")
   servidores Servidor[] @relation("EmpresaServidores")
-
+  produtos EmpresaProduto[]
+  monitoramentos Monitoramento[]
   @@unique([tenant, env], name: "tenant_env")
   @@map("empresa")
 }
@@ -177,3 +177,43 @@ model AlertaUsuario {
 
   @@map("alerta_usuario")
 }
+
+model Produto {
+  id            Int            @id @default(autoincrement())
+  nome_produto  String
+  status        String         @default("ativo") // ativo, inativo, etc.
+  empresas      EmpresaProduto[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  @@map("produto")
+}
+
+model EmpresaProduto {
+  id          Int       @id @default(autoincrement())
+  empresa_id  Int
+  produto_id  Int
+  status      String    @default("ativo") // ativo, suspenso, cancelado...
+  contratado_em DateTime @default(now())
+
+  empresa     Empresa   @relation(fields: [empresa_id], references: [id])
+  produto     Produto   @relation(fields: [produto_id], references: [id])
+
+  @@unique([empresa_id, produto_id]) // uma empresa não pode ter o mesmo produto repetido
+  @@map("empresa_produto")
+}
+
+model Monitoramento {
+  id                Int      @id @default(autoincrement())
+  empresa_id        Int
+  nome_monitoramento String
+  produto           String   // SVS Monitor ou SVS Insights
+  projetos          Json     // [{ id: 1, nome: "Projeto A" }, ...]
+  servidores        Json     // [{ id: 1, nome: "Servidor A", projetoId: 1 }, ...]
+  status            String   @default("ativo")
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // Relacionamento (exemplo, ajuste se usa outro nome)
+  empresa           Empresa  @relation(fields: [empresa_id], references: [id])
+  @@map("monitoramento")
+} 

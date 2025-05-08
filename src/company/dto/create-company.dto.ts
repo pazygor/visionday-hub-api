@@ -45,9 +45,6 @@ export class CreateCompanyDto {
     @IsNotEmpty()
     env: string;
 
-    @IsString()
-    @IsNotEmpty()
-    modoContratado: string;
 
     @IsInt()
     @Min(0)
