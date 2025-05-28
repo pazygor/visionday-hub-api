@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateAlertParamDto } from './dto/create-alert-param.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateAlertParamDto } from './dto/update-alert-param.dto';
@@ -42,4 +42,36 @@ export class AlertParamsService {
       where: { id },
     });
   }
+  async saveOrUpdateAll(alertParams: CreateAlertParamDto[], serverId: number) {
+    if (!serverId) {
+      throw new BadRequestException('serverId é obrigatório');
+    }
+
+    // Apaga todos os registros existentes com o mesmo serverId
+    await this.prisma.alertaParametro.deleteMany({
+      where: { serverId },
+    });
+
+    // Insere todos os novos registros
+    await Promise.all(alertParams.map(data => {
+      return this.prisma.alertaParametro.create({
+        data: {
+          nomeCampo: data.nomeCampo,
+          criticidade: { connect: { id: data.criticidadeId } },
+          unidadeValor: data.unidadeValor,
+          valor: data.valor,
+          servidor: { connect: { id: data.serverId } },
+          empresa: { connect: { id: data.empresaId } },
+          metrica: { connect: { id: data.metricasId } },
+          type: data.type
+        }
+      });
+    }));
+
+    // Retorna os registros inseridos
+    return this.prisma.alertaParametro.findMany({
+      where: { serverId },
+    });
+  }
+
 }
