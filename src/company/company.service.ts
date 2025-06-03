@@ -8,13 +8,27 @@ export class CompanyService {
   constructor(private readonly prisma: PrismaService) { }
 
   async create(dto: CreateCompanyDto) {
+    // 1. Preparar dados (sem o tenant)
     const data = {
       ...dto,
       dataAdesao: new Date(dto.dataAdesao),
       horaAdesao: new Date(`1970-01-01T${dto.horaAdesao}`),
+      tenant: '', // temporariamente vazio
     };
 
-    return this.prisma.empresa.create({ data });
+    // 2. Criar empresa no banco
+    const empresaCriada = await this.prisma.empresa.create({ data });
+
+    // 3. Gerar tenant baseado no ID (ex: 000001)
+    const tenant = empresaCriada.id.toString().padStart(6, '0');
+
+    // 4. Atualizar empresa com tenant
+    const empresaAtualizada = await this.prisma.empresa.update({
+      where: { id: empresaCriada.id },
+      data: { tenant },
+    });
+
+    return empresaAtualizada;
   }
 
   async findAll() {

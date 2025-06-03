@@ -1,5 +1,3 @@
-
-
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -27,7 +25,6 @@ model Empresa {
   dataAdesao       DateTime    @db.Date @map("data_adesao")
   horaAdesao       DateTime    @db.Time(0) @map("hora_adesao")
   tenant           String      @map("tenant")
-  env              String      @map("env")
   limiteProjetos   Int         @default(0) @map("limite_projetos")
   limiteServidores Int         @default(0) @map("limite_servidores")
 
@@ -37,7 +34,6 @@ model Empresa {
   produtos EmpresaProduto[]
   monitoramentos Monitoramento[]
   alertasParametros AlertaParametro[]
-  @@unique([tenant, env], name: "tenant_env")
   @@map("empresa")
 }
 

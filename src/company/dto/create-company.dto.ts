@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsInt, Min, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsInt, Min, MaxLength, IsOptional } from 'class-validator';
 export class CreateCompanyDto {
     @IsString()
     @IsNotEmpty()
@@ -41,9 +41,6 @@ export class CreateCompanyDto {
     @IsNotEmpty()
     tenant: string;
 
-    @IsString()
-    @IsNotEmpty()
-    env: string;
 
 
     @IsInt()

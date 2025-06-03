@@ -11,11 +11,9 @@ CREATE TABLE `empresa` (
     `data_adesao` DATE NOT NULL,
     `hora_adesao` TIME(0) NOT NULL,
     `tenant` VARCHAR(191) NOT NULL,
-    `env` VARCHAR(191) NOT NULL,
     `limite_projetos` INTEGER NOT NULL DEFAULT 0,
     `limite_servidores` INTEGER NOT NULL DEFAULT 0,
 
-    UNIQUE INDEX `empresa_tenant_env_key`(`tenant`, `env`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -178,22 +176,6 @@ CREATE TABLE `criticidade` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- Inserts fixos
-INSERT INTO `criticidade` (`id`, `nome`) VALUES
-  (0, 'Emergency'),
-  (1, 'Alert'),
-  (2, 'Critical'),
-  (3, 'Error'),
-  (4, 'Warning'),
-  (5, 'Notice'),
-  (6, 'Informational'),
-  (7, 'Debug');
-
-INSERT INTO `metricas` (`id`, `nome`) VALUES
-  (1, 'satura'),
-  (2, 'processo'),
-  (3, 'rede'),
-  (4, 'disco');
 
 -- AddForeignKey
 ALTER TABLE `projeto` ADD CONSTRAINT `projeto_empresa_id_fkey` FOREIGN KEY (`empresa_id`) REFERENCES `empresa`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

@@ -84,7 +84,6 @@ export class MonitorService {
       select: {
         limiteProjetos: true,
         limiteServidores: true,
-        env: true,
         tenant: true
       }
     });
@@ -114,18 +113,15 @@ export class MonitorService {
       }
     }
 
-    
-
     const projetosCriados: Projeto[] = [];
     const servidoresCriados: any[] = [];
 
     for (const proj of projetos) {
-      
-
+      // 1. Criar o projeto sem o env
       const projetoCriado = await this.prisma.projeto.create({
         data: {
           nome: proj.nome,
-          env: empresa.env,
+          env: '', // temporário
           tenant: empresa.tenant,
           dataInicio: new Date(),
           status: 'ativo',
@@ -134,6 +130,16 @@ export class MonitorService {
         }
       });
 
+      // 2. Gerar o env com base no ID
+      const env = projetoCriado.id.toString().padStart(6, '0');
+
+      // 3. Atualizar o projeto com o env
+      const projetoAtualizado = await this.prisma.projeto.update({
+        where: { id: projetoCriado.id },
+        data: { env }
+      });
+
+      // 4. Criar os servidores ligados a esse projeto
       for (const srv of proj.servidores) {
         const servidorCriado = await this.prisma.servidor.create({
           data: {
@@ -158,10 +164,8 @@ export class MonitorService {
       }
 
       projetosCriados.push({
-        ...projetoCriado,
-        localArmazenamento: proj.local_armazenamento,
-        env: empresa.env,
-        tenant: empresa.tenant
+        ...projetoAtualizado,
+        localArmazenamento: proj.local_armazenamento
       });
     }
 
@@ -173,15 +177,13 @@ export class MonitorService {
       localArmazenamento: p.localArmazenamento
     }));
 
-    const listaServidoresJson = servidoresCriados;
-
     const monitoramentoCriado = await this.prisma.monitoramento.create({
       data: {
         empresa_id: empresaId,
         nome_monitoramento: monitoramento.nome,
         produto: tipoColeta,
         projetos: listaProjetosJson,
-        servidores: listaServidoresJson,
+        servidores: servidoresCriados,
         status: 'ativo'
       }
     });

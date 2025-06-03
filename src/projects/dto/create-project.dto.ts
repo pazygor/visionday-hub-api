@@ -4,9 +4,11 @@ export class CreateProjectDto {
     nome: string;
 
     @IsString()
+    @IsOptional()
     env: string;
 
     @IsString()
+    @IsOptional()
     tenant: string;
 
     @IsDateString()

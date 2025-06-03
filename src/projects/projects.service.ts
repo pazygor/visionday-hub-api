@@ -7,18 +7,42 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 export class ProjectsService {
   constructor(private prisma: PrismaService) { }
 
-  create(createProjectDto: CreateProjectDto) {
+  async create(createProjectDto: CreateProjectDto) {
     // Verificar se empresaId foi fornecido e é válido
     if (!createProjectDto.empresaId) {
       throw new Error('O campo empresaId é obrigatório');
     }
-
-    return this.prisma.projeto.create({
-      data: {
-        ...createProjectDto,
-        dataInicio: new Date(createProjectDto.dataInicio),
-      },
+    // Buscar tenant da empresa
+    const empresa = await this.prisma.empresa.findUnique({
+      where: { id: createProjectDto.empresaId },
+      select: { tenant: true }
     });
+
+    if (!empresa) {
+      throw new Error('Empresa não encontrada');
+    }
+
+    // 1. Preparar os dados (sem o env, mas com tenant)
+    const data = {
+      ...createProjectDto,
+      tenant: empresa.tenant,
+      dataInicio: new Date(createProjectDto.dataInicio),
+      env: '', // temporariamente vazio
+    };
+
+    // 2. Criar o projeto
+    const projetoCriado = await this.prisma.projeto.create({ data });
+
+    // 3. Gerar o env com base no ID (ex: 000001)
+    const env = projetoCriado.id.toString().padStart(6, '0');
+
+    // 4. Atualizar o projeto com o env
+    const projetoAtualizado = await this.prisma.projeto.update({
+      where: { id: projetoCriado.id },
+      data: { env },
+    });
+
+    return projetoAtualizado;
   }
 
   findAll() {
