@@ -39,7 +39,31 @@ export class ServersService {
     });
   }
   async getAlertDataByServer(serverId: number) {
-    // Busca os usuários de alerta
+    // Busca o servidor com as relações para empresa e projeto
+    const server = await this.prisma.servidor.findUnique({
+      where: { id: serverId },
+      include: {
+        empresa: {
+          select: { tenant: true },
+        },
+        projeto: {
+          select: { env: true },
+        },
+      },
+    });
+
+    if (!server) {
+      return {
+        success: false,
+        message: 'Servidor não encontrado.',
+      };
+    }
+    
+    const tenant = server.empresa?.tenant;
+    const env = server.projeto?.env;
+    const ip = server.ip;
+
+    // Busca os contatos de alerta
     const contacts = await this.prisma.alertaUsuario.findMany({
       where: { servidorId: serverId },
     });
@@ -49,17 +73,12 @@ export class ServersService {
       where: { serverId: serverId },
     });
 
-    // Exemplo: buscar parâmetro "ativo", se você tiver uma flag como `is_active` ou algo assim
-    // const activeInfraParameter = await this.prisma.alertaParametro.findFirst({
-    //   where: {
-    //     server_id: serverId,
-    //     ativo: true, // substitua pelo campo correto se for diferente
-    //   },
-    // });
-
     return {
       success: true,
       data: {
+        tenant,         // Vem da empresa
+        env,            // Vem do projeto
+        ip,         
         contacts,
         infraParameters,
       },
