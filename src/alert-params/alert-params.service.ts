@@ -63,7 +63,10 @@ export class AlertParamsService {
           servidor: { connect: { id: data.serverId } },
           empresa: { connect: { id: data.empresaId } },
           metrica: { connect: { id: data.metricasId } },
-          type: data.type
+          type: data.type,
+          tenant: data.tenant,
+          env: data.env,
+          ip: data.ip
         }
       });
     }));

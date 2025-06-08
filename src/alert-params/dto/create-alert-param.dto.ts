@@ -31,5 +31,17 @@ export class CreateAlertParamDto {
     @IsString()
     @IsNotEmpty()
     unidadeValor: string;
+    // ✅ Campos adicionados recentemente:
+    @IsString()
+    @IsNotEmpty()
+    tenant: string;
+
+    @IsString()
+    @IsNotEmpty()
+    env: string;
+
+    @IsString()
+    @IsNotEmpty()
+    ip: string;
 }
 

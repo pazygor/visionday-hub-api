@@ -136,6 +136,9 @@ model AlertaParametro {
   valor           Float        @map("valor")
   type            String       @map("type") // 'app' ou 'infra'
   unidadeValor    String       @map("unidade_valor")
+  tenant          String       @map("tenant")
+  env             String       @map("env")
+  ip              String       @map("ip")
 
   // Relações
   servidor        Servidor     @relation(fields: [serverId], references: [id], onDelete: Cascade)

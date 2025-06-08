@@ -107,6 +107,9 @@ CREATE TABLE `alerta_parametros` (
     `valor` DOUBLE NOT NULL,
     `type` VARCHAR(191) NOT NULL,
     `unidade_valor` VARCHAR(191) NOT NULL,
+    `tenant` VARCHAR(191) NOT NULL,
+    `env` VARCHAR(191) NOT NULL,
+    `ip` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
