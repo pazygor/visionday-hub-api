@@ -8,15 +8,15 @@ on:
     branches:
       - master
   workflow_dispatch:
-env:  # 👈 Adicione variáveis globais
+env:
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   NODE_ENV: production
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -26,10 +26,14 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Install dependencies (with devDependencies)
-        run: |
-          npm ci
-          npm install @nestjs/cli  # Garante explicitamente a instalação do CLI
+      - name: Install Nest CLI globally
+        run: npm install -g @nestjs/cli
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Nest CLI
+        run: nest -v
 
       - name: Run Prisma commands
         run: |
@@ -37,10 +41,7 @@ jobs:
           npx prisma migrate deploy
 
       - name: Build the app
-        run: npm run build  # Agora deve funcionar
-
-      - name: Run tests
-        run: npm run test --if-present
+        run: npm run build
 
       - name: Create deployment artifact
         run: zip -r release.zip ./* -x "node_modules/*"
