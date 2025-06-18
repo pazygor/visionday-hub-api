@@ -25,7 +25,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
+      - name: Install Prisma CLI globally
+        run: npm install -g prisma
 
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Run Prisma commands
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
       - name: npm install, build, and test
         run: |
           npm install
