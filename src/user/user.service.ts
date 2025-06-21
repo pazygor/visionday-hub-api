@@ -61,6 +61,7 @@ export class UserService {
         perfil: true,
         celular: true,
         cadastro: true,
+        senha: true
       },
     });
   }

@@ -141,6 +141,10 @@ export class MonitorService {
 
       // 4. Criar os servidores ligados a esse projeto
       for (const srv of proj.servidores) {
+        // ✅ Definição de nome e senha de acordo com o SO
+        const nomeUsuario =
+          srv.sistema_operacional === 'Windows' ? srv.dominioUser : srv.user;
+
         const servidorCriado = await this.prisma.servidor.create({
           data: {
             nome: srv.nome,
@@ -149,7 +153,12 @@ export class MonitorService {
             sistemaOperacional: srv.sistema_operacional,
             status: 'ativo',
             projetoId: projetoCriado.id,
-            empresaId: empresaId
+            empresaId: empresaId,
+
+            /* Novos campos */
+            nomeUsuario: nomeUsuario,
+            senhaUsuario: srv.senha,
+            sudo: srv.sudo
           }
         });
 
@@ -159,7 +168,11 @@ export class MonitorService {
           ip: servidorCriado.ip,
           sistemaOperacional: servidorCriado.sistemaOperacional,
           tipo: servidorCriado.tipo,
-          projetoId: servidorCriado.projetoId
+          projetoId: servidorCriado.projetoId,
+          empresaId: servidorCriado.empresaId,
+          nomeUsuario: servidorCriado.nomeUsuario,
+          senhaUsuario: servidorCriado.senhaUsuario,
+          sudo: servidorCriado.sudo
         });
       }
 

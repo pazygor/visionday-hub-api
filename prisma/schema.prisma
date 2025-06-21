@@ -66,6 +66,9 @@ model Servidor {
   projeto              Projeto       @relation("ProjetoServidores", fields: [projetoId], references: [id], onDelete: Cascade)
   empresaId            Int           @map("empresa_id")
   empresa              Empresa       @relation("EmpresaServidores", fields: [empresaId], references: [id], onDelete: Cascade)
+  nomeUsuario          String?        @map("nome_usuario")
+  senhaUsuario         String?        @map("senha_usuario")
+  sudo               Boolean    @default(false) @map("sudo")
 
   // Novo relacionamento com AlertaParametro
   parametrosAlerta     AlertaParametro[] // Um servidor pode ter vários parâmetros de alerta
