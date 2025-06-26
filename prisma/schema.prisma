@@ -95,7 +95,13 @@ model Usuario {
   perfil         Int?              @map("perfil")
   celular        String?           @map("celular")
   cadastro       Int?              @map("cadastro")
-
+  account        String?           @map("account")
+  emailLanguage  String?           @map("email_language")
+  appLanguage    String?           @map("app_language")
+  country        String?           @map("country")
+  autoProjectCreation Boolean?     @map("auto_project_creation")
+  throughPutUnit      String?      @map("through_put_unit")
+  
   empresa        Empresa           @relation("EmpresaUsuarios", fields: [empresaId], references: [id])
   grupoUsuarios  GrupoUsuario[]    @relation("GrupoUsuarios")
 

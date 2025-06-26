@@ -37,6 +37,13 @@ export class UserService {
         perfil: true,
         celular: true,
         cadastro: true,
+        senha: true,
+        account: true,
+        emailLanguage: true,
+        appLanguage: true,
+        country: true,
+        autoProjectCreation: true,
+        throughPutUnit: true
       },
     });
   }
@@ -61,7 +68,13 @@ export class UserService {
         perfil: true,
         celular: true,
         cadastro: true,
-        senha: true
+        senha: true,
+        account: true,
+        emailLanguage: true,
+        appLanguage: true,
+        country: true,
+        autoProjectCreation: true,
+        throughPutUnit: true
       },
     });
   }

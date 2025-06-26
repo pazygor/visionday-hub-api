@@ -51,4 +51,29 @@ export class CreateUserDto {
     @IsOptional()
     @IsInt()
     cadastro?: number;
+
+    @IsOptional()
+    @IsString()
+    account?: string;
+
+    @IsOptional()
+    @IsString()
+    emailLanguage?: string;
+
+    @IsOptional()
+    @IsString()
+    appLanguage?: string;
+
+    @IsOptional()
+    @IsString()
+    country?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    autoProjectCreation?: boolean;
+
+    @IsOptional()
+    @IsString()
+    throughPutUnit?: string
+    
 }
