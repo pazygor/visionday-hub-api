@@ -180,7 +180,7 @@ export class AlertParamsService {
   `;
   }
   async sendMessage(dto: { number: string; message: string }) {
-    const url = 'http://localhost:8080/message/sendText/aula';
+    const url = 'http://20.206.249.202:8080/message/sendText/ygor';
     const headers = {
       'Content-Type': 'application/json',
       'apikey': 'f7b0f19cb635ad60ef8d4f5cdb88a5a9',
