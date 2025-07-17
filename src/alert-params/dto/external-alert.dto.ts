@@ -4,6 +4,7 @@ import {
 import { Type } from 'class-transformer';
 
 export class ExternalAlertItemDto {
+    @IsNumber() servidor_id: number;
     @IsNumber() empresa_id: number;
     @IsNumber() criticidadeid: number;
     @IsNumber() metrica_id: number;

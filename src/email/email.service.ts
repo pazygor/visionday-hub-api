@@ -4,14 +4,14 @@ import { SendEmailDto } from './dto/send-email.dto';
 
 @Injectable()
 export class EmailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(private readonly mailerService: MailerService) { }
 
-  async sendEmail(sendEmailDto: SendEmailDto): Promise<void> {
-    const { email, message } = sendEmailDto;
+  async sendEmail(email: string, message: string): Promise<void> {
+    //console.log('sendEmail:', email, message);
     await this.mailerService.sendMail({
       to: email,
       subject: 'Alerta do Sistema',
-      text: message,
+      html: message, // ou `text: message` se for texto puro
     });
   }
 }

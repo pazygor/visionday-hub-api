@@ -3,11 +3,15 @@ import { CreateAlertParamDto } from './dto/create-alert-param.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateAlertParamDto } from './dto/update-alert-param.dto';
 import { ExternalAlertItemDto } from './dto/external-alert.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { EmailService } from '../email/email.service';
 @Injectable()
 export class AlertParamsService {
   constructor(
-    private prisma: PrismaService
-    // private readonly whats: WhatsAppService,
+    private prisma: PrismaService,
+    private readonly httpService: HttpService, // ← aqui
+    private readonly email: EmailService,
     // private readonly mail: MailService,
   ) { }
   async findAll() {
@@ -82,55 +86,46 @@ export class AlertParamsService {
   }
   async processExternalAlerts(alerts: ExternalAlertItemDto[]) {
     // 1) agrupa por empresa para uma notificação única
-    const byEmpresa = alerts.reduce((acc, cur) => {
-      (acc[cur.empresa_id] ||= []).push(cur);
+    const byServidor = alerts.reduce((acc, cur) => {
+      (acc[cur.servidor_id] ||= []).push(cur);
       return acc;
     }, {} as Record<number, ExternalAlertItemDto[]>);
 
-    const results = [];
+    const results: { servidorId: number; status?: string; enviados?: number }[] = [];
+    //console.log(alerts);
+    for (const [servidorIdStr, grupo] of Object.entries(byServidor)) {
+      const servidorId = +servidorIdStr;
 
-    // for (const [empresaIdStr, grupo] of Object.entries(byEmpresa)) {
-    //   const empresaId = +empresaIdStr;
+      // 2) busca contatos ativos dessa empresa
+      const usuarios = await this.prisma.alertaUsuario.findMany({
+        where: { servidorId },
+        select: { contato: true },
+      });
 
-    //   // 2) busca contatos ativos dessa empresa
-    //   const contatos = await this.prisma.contato.findMany({
-    //     where: { empresaId, ativo: true },
-    //     select: { email: true, celular: true },
-    //   });
+      if (!usuarios.length) {
+        results.push({ servidorId, status: 'sem_contatos' });
+        continue;
+      }
+      // Separa e-mails e celulares (forma simples de separar)
+      const emails: string[] = [];
+      const telefones: string[] = [];
 
-    //   if (!contatos.length) {
-    //     results.push({ empresaId, status: 'sem_contatos' });
-    //     continue;
-    //   }
+      for (const u of usuarios) {
+        if (u.contato.includes('@')) emails.push(u.contato);
+        else telefones.push(u.contato.replace(/\D/g, '')); // remove tudo que não é número
+      }
+      // 3) monta as mensagens
+      const textMsg = this.buildWhatsText(grupo);
+      const htmlMsg = this.buildHtmlEmail(grupo);
+      await Promise.all(
+        telefones.map(tel =>
+          this.sendMessage({ number: tel, message: textMsg }),
+        ),
+      );
+      await Promise.all(emails.map(email => this.email.sendEmail(email, htmlMsg)));
 
-    //   // 3) monta as mensagens
-    //   const textMsg = this.buildWhatsText(grupo);
-    //   const htmlMsg = this.buildHtmlEmail(grupo);
-
-    //   // 4) dispara WhatsApp
-    //   await Promise.all(
-    //     contatos
-    //       .filter(c => c.celular)
-    //       .map(c => this.whats.sendText(c.celular!, textMsg)),
-    //   );
-
-    //   // 5) dispara e‑mail
-    //   await Promise.all(
-    //     contatos
-    //       .filter(c => c.email)
-    //       .map(c => this.mail.sendHtml(c.email!, '🚨 Alerta de Monitoramento', htmlMsg)),
-    //   );
-
-    //   // 6) (opcional) salva os alertas no banco
-    //   await this.prisma.alerta.createMany({
-    //     data: grupo.map(g => ({
-    //       empresaId,
-    //       ...g,              // campos que existirem na tabela
-    //     })),
-    //   });
-
-    //   results.push({ empresaId, enviadosPara: contatos.length });
-    // }
+      results.push({ servidorId, enviados: emails.length + telefones.length });
+    }
 
     return { ok: true, results };
   }
@@ -157,25 +152,68 @@ export class AlertParamsService {
       .map(
         a => `
         <tr>
-          <td>${a.nome_campo}</td>
-          <td>${a.valor}${a.unidade}</td>
-          <td>${a.ip}</td>
-          <td>${a.tenant}/${a.env}</td>
-          <td>${a.timestamp}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${a.nome_campo}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${a.valor}${a.unidade}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${a.ip}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${a.tenant}/${a.env}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${a.timestamp}</td>
         </tr>`,
       )
       .join('');
+
     return `
-      <h2 style="color:#d9534f">Alertas de Monitoramento</h2>
-      <table style="border-collapse:collapse;width:100%">
+    <div style="font-family: Arial, sans-serif; font-size: 14px;">
+      <h2 style="color:#d9534f">🚨 Alertas de Monitoramento</h2>
+      <table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">
         <thead>
-          <tr style="background:#f5f5f5">
-            <th>Métrica</th><th>Valor</th><th>IP</th>
-            <th>Ambiente</th><th>Timestamp</th>
+          <tr style="background: #f5f5f5;">
+            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Métrica</th>
+            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Valor</th>
+            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">IP</th>
+            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Ambiente</th>
+            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Timestamp</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
-      </table>`;
+      </table>
+    </div>
+  `;
+  }
+  async sendMessage(dto: { number: string; message: string }) {
+    const url = 'http://localhost:8080/message/sendText/aula';
+    const headers = {
+      'Content-Type': 'application/json',
+      'apikey': 'f7b0f19cb635ad60ef8d4f5cdb88a5a9',
+    };
+
+    // 🧠 Garante que o número está no formato correto: 55 + DDD + número
+    let number = dto.number.replace(/\D/g, ''); // remove tudo que não é número
+
+    if (!number.startsWith('55')) {
+      number = `55${number}`;
+    }
+
+    const data = {
+      number, // agora no formato correto
+      text: dto.message,
+      options: {
+        delay: 0,
+        presence: 'composing',
+        linkPreview: true,
+      },
+    };
+
+    //console.log(data); // ✅ agora o number será: 5511XXXXXXXXX
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(url, data, { headers })
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Erro ao enviar WhatsApp:', error?.message || error);
+      return { error: true, message: error?.message || 'Erro desconhecido' };
+    }
   }
 
 }

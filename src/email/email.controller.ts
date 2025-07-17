@@ -4,12 +4,12 @@ import { SendEmailDto } from './dto/send-email.dto';
 
 @Controller('email')
 export class EmailController {
-  constructor(private readonly emailService: EmailService) {}
+  constructor(private readonly emailService: EmailService) { }
 
   @Post('send')
   async sendEmail(@Body() sendEmailDto: SendEmailDto): Promise<{ message: string }> {
-    // return (sendEmailDto);
-    await this.emailService.sendEmail(sendEmailDto);
+    const { email, message } = sendEmailDto;
+    await this.emailService.sendEmail(email, message); // ✅ Agora funciona
     return { message: 'E-mail enviado com sucesso' };
   }
 }
