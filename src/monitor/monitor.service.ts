@@ -125,8 +125,9 @@ export class MonitorService {
           tenant: empresa.tenant,
           dataInicio: new Date(),
           status: 'ativo',
-          localArmazenamento: proj.local_armazenamento,
-          empresaId: empresaId
+          localArmazenamento: '',
+          empresaId: empresaId,
+          monitoramentoProtheus: proj.hasProtheusMonitoring
         }
       });
 
@@ -158,7 +159,8 @@ export class MonitorService {
             /* Novos campos */
             nomeUsuario: nomeUsuario,
             senhaUsuario: srv.senha,
-            sudo: srv.sudo
+            sudo: srv.sudo,
+            data: srv.data
           }
         });
 
@@ -172,7 +174,8 @@ export class MonitorService {
           empresaId: servidorCriado.empresaId,
           nomeUsuario: servidorCriado.nomeUsuario,
           senhaUsuario: servidorCriado.senhaUsuario,
-          sudo: servidorCriado.sudo
+          sudo: servidorCriado.sudo,
+          data: servidorCriado.data
         });
       }
 

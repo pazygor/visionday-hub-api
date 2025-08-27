@@ -48,6 +48,7 @@ model Projeto {
   localArmazenamento  String     @map("local_armazenamento") // ✅ Adicionado aqui
   empresaId           Int?       @map("empresa_id")
   empresa             Empresa?   @relation("EmpresaProjetos", fields: [empresaId], references: [id], onDelete: Cascade)
+  monitoramentoProtheus Boolean @default(false) @map("monitoramento_protheus")
 
   servidores Servidor[] @relation("ProjetoServidores")
 
@@ -70,6 +71,8 @@ model Servidor {
   nomeUsuario          String?        @map("nome_usuario")
   senhaUsuario         String?        @map("senha_usuario")
   sudo               Boolean    @default(false) @map("sudo")
+  // Novo campo para environments e portas
+  data                 Json?            @map("data")
 
   // Novo relacionamento com AlertaParametro
   parametrosAlerta     AlertaParametro[] // Um servidor pode ter vários parâmetros de alerta

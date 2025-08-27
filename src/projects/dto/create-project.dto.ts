@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsDateString, IsOptional } from 'class-validator';
+import { IsString, IsInt, IsDateString, IsOptional, IsBoolean } from 'class-validator';
 export class CreateProjectDto {
     @IsString()
     nome: string;
@@ -21,5 +21,10 @@ export class CreateProjectDto {
     empresaId: number; // Garantir que seja obrigatório
 
     @IsString()
+    @IsOptional()
     localArmazenamento: string;
+    
+    @IsBoolean()
+    @IsOptional()
+    monitoramentoProtheus?: boolean
 }
