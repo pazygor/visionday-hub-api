@@ -35,6 +35,10 @@ model Empresa {
   produtos EmpresaProduto[]
   monitoramentos Monitoramento[]
   alertasParametros AlertaParametro[]
+  operadoresDeploy DP0[]       @relation("EmpresaDP0") // <- adicionando relação com DP0
+  operadorcoesDeploy DP1[]       @relation("EmpresaDP1") // <- adicionando relação com DP1
+  tarefasDeploy DP2[]       @relation("EmpresaDP2") // <- adicionando relação com DP2
+  serversDeploy DP3[]       @relation("EmpresaDP3") // <- adicionando relação com DP3
   @@map("empresa")
 }
 
@@ -111,6 +115,7 @@ model Usuario {
   grupoUsuarios  GrupoUsuario[]          @relation("GrupoUsuarios")
   usuarioProdutos UsuarioProduto[]       // Relação com os produtos permitidos
   usuarioProdutoSistemas UsuarioProdutoSistema[] @relation("UsuarioToProdutoSistema")
+  dp0Users       DP0[]                   @relation("UsuarioDP0") // relação reversa opcional
 
   @@map("usuarios")
 }
@@ -141,6 +146,7 @@ model Permissao {
   descricao String?
 
   usuarios  Usuario[] @relation("PermissaoUsuarios")
+  operadoresDP0 DP0[] // <- nova relação com a tabela DP0
 
   @@map("permissao")
 }
@@ -285,4 +291,63 @@ model Criticidade {
 
   parametros       AlertaParametro[] // relação reversa
   @@map("criticidade")
+}
+model DP0 {
+  id          Int       @id @default(autoincrement()) @map("dp0_codope") // Código do operador
+  empresaId   Int       @map("empresa_id")
+  oper        String    @map("dp0_oper")     // nome do operador
+  email       String    @map("dp0_email")      // email do operador
+  senha       String    @map("dp0_senha")      // senha do operador
+  permissaoId Int       @map("dp0_permissao")                // FK para permissões
+  grants      String    @map("dp0_grants")   // permissões extras (se precisar)
+  usergi      String?    @map("dp0_usergi")   // log inclusão
+  userga      String?    @map("dp0_userga")   // log alteração
+  usuarioId   Int?      @map("usuario_id") // FK para tabela usuario
+  // Relações
+  empresa     Empresa   @relation("EmpresaDP0", fields: [empresaId], references: [id], onDelete: Cascade)
+  permissao   Permissao @relation(fields: [permissaoId], references: [id])
+  usuario     Usuario?  @relation("UsuarioDP0", fields: [usuarioId], references: [id])
+
+  @@map("dp0")
+}
+model DP1 {
+  id          Int       @id @default(autoincrement()) @map("dp1_codope") // Código da operação
+  empresaId   Int       @map("empresa_id")
+  oper        String    @map("dp1_oper")     // nome da operadoração
+  usergi      String?    @map("dp1_usergi")   // log inclusão
+  userga      String?    @map("dp1_userga")   // log alteração
+
+  // Relações
+  empresa     Empresa   @relation("EmpresaDP1", fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("dp1")
+}
+
+model DP2 {
+  codtsk    Int      @id @map("dp2_codtsk")       // Código da tarefa (10, 20, 30…)
+  empresaId Int      @map("empresa_id")          // FK para empresa
+  task      String   @map("dp2_task")  // Nome da tarefa
+  tag       String?  @map("dp2_tag")   // TAG JSON
+  usergi    String?  @map("dp2_usergi") // Log inclusão
+  userga    String?  @map("dp2_userga") // Log alteração
+
+  // Relação com Empresa
+  empresa   Empresa  @relation("EmpresaDP2", fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("dp2")
+}
+
+model DP3 {
+  codent    Int      @id @default(autoincrement()) @map("dp3_codent") // Código do agente (auto_increment)
+  empresaId Int      @map("empresa_id")                              // FK para empresa
+  nome      String   @map("dp3_nome")                // Nome do agente
+  ipsvs     String?  @map("dp3_ipsvs")               // IP do Server SVS
+  porta     String?  @map("dp3_porta")                // Porta do Server SVS
+  usergi    String?  @map("dp3_usergi")              // Log de inclusão
+  userga    String?  @map("dp3_userga")              // Log de alteração
+
+  // Relação com Empresa
+  empresa   Empresa  @relation("EmpresaDP3", fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("dp3")
 }
