@@ -5,7 +5,7 @@ import { UpdateTaskDeployDto } from './dto/update-task-deploy.dto';
 
 @Controller('task-deploy')
 export class TaskDeployController {
-  constructor(private readonly taskDeployService: TaskDeployService) {}
+  constructor(private readonly taskDeployService: TaskDeployService) { }
 
   @Post()
   create(@Body() createTaskDeployDto: CreateTaskDeployDto) {
@@ -17,18 +17,32 @@ export class TaskDeployController {
     return this.taskDeployService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taskDeployService.findOne(+id);
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.taskDeployService.findOne(+id);
+  // }
+  @Get('by_empresa_id/:empresaId')
+  findByEmpresa(@Param('empresaId') empresaId: string) {
+    return this.taskDeployService.findByEmpresa(+empresaId);
+  }
+  @Patch(':empresaId/:codtsk')
+  update(
+    @Param('empresaId') empresaId: string,
+    @Param('codtsk') codtsk: string,
+    @Body() updateTaskDeployDto: UpdateTaskDeployDto,
+  ) {
+    return this.taskDeployService.update(+empresaId, +codtsk, updateTaskDeployDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDeployDto: UpdateTaskDeployDto) {
-    return this.taskDeployService.update(+id, updateTaskDeployDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskDeployService.remove(+id);
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.taskDeployService.remove(+id);
+  // }
+  @Delete(':empresaId/:codtsk')
+  deleteTask(
+    @Param('empresaId') empresaId: number,
+    @Param('codtsk') codtsk: number,
+  ) {
+    return this.taskDeployService.deleteTask(+empresaId, +codtsk);
   }
 }

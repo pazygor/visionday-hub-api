@@ -324,16 +324,16 @@ model DP1 {
 }
 
 model DP2 {
-  codtsk    Int      @id @map("dp2_codtsk")       // Código da tarefa (10, 20, 30…)
-  empresaId Int      @map("empresa_id")          // FK para empresa
-  task      String   @map("dp2_task")  // Nome da tarefa
-  tag       String?  @map("dp2_tag")   // TAG JSON
-  usergi    String?  @map("dp2_usergi") // Log inclusão
-  userga    String?  @map("dp2_userga") // Log alteração
+  codtsk    Int      @map("dp2_codtsk")       // Código da tarefa (10, 20, 30…)
+  empresaId Int      @map("empresa_id")       // FK para empresa
+  task      String   @map("dp2_task")
+  tag       String?  @map("dp2_tag")
+  usergi    String?  @map("dp2_usergi")
+  userga    String?  @map("dp2_userga")
 
-  // Relação com Empresa
   empresa   Empresa  @relation("EmpresaDP2", fields: [empresaId], references: [id], onDelete: Cascade)
 
+  @@id([empresaId, codtsk]) // <-- chave composta
   @@map("dp2")
 }
 

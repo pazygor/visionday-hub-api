@@ -32,6 +32,14 @@ export class OperationsDeployService {
     if (!item) throw new NotFoundException('Registro não encontrado');
     return item;
   }
+  async findByEmpresa(empresaId: number) {
+    const operations = await this.prisma.dP1.findMany({
+      where: { empresaId },
+      // include: { empresa: true }, // opcional, se quiser os dados da empresa
+    });
+
+    return operations;
+  }
 
   async update(id: number, dto: UpdateOperationsDeployDto) {
     try {

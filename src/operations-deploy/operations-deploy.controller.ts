@@ -16,6 +16,11 @@ export class OperationsDeployController {
   findAll() {
     return this.service.findAll();
   }
+  
+  @Get('by_empresa_id/:empresaId')
+  findByEmpresa(@Param('empresaId') empresaId: string) {
+    return this.service.findByEmpresa(+empresaId);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
