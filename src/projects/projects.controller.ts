@@ -42,6 +42,10 @@ export class ProjectsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.projectsService.remove(id);
   }
+  @Get('empresa/:empresaId')
+  findByEmpresaId(@Param('empresaId', ParseIntPipe) empresaId: number) {
+    return this.projectsService.findByEmpresaId(empresaId);
+  }
 }
 
 // @Controller('projects')

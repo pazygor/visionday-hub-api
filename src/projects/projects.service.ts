@@ -67,6 +67,11 @@ export class ProjectsService {
       where: { id },
     });
   }
+  async findByEmpresaId(empresaId: number) {
+    return this.prisma.projeto.findMany({
+      where: { empresaId },
+    });
+  }
 }
 
 // @Injectable()
