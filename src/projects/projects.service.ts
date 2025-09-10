@@ -69,9 +69,33 @@ export class ProjectsService {
   }
   async findByEmpresaId(empresaId: number) {
     return this.prisma.projeto.findMany({
-      where: { empresaId },
+      where: {
+        empresaId,
+        enabled: true
+      },
     });
   }
+  async enableProjects(projetos: { id?: number; env?: string }[]) {
+    const updates = await Promise.all(
+      projetos.map(async (proj) => {
+        if (proj.id) {
+          return this.prisma.projeto.update({
+            where: { id: proj.id },
+            data: { enabled: true },
+          });
+        } else if (proj.env) {
+          return this.prisma.projeto.updateMany({
+            where: { env: proj.env },
+            data: { enabled: true },
+          });
+        }
+        return null;
+      }),
+    );
+
+    return updates.filter((u) => u !== null);
+  }
+
 }
 
 // @Injectable()

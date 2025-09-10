@@ -11,6 +11,7 @@ import {
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { EnableProjectsDto } from './dto/enable-projects.dto';
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) { }
@@ -46,6 +47,13 @@ export class ProjectsController {
   findByEmpresaId(@Param('empresaId', ParseIntPipe) empresaId: number) {
     return this.projectsService.findByEmpresaId(empresaId);
   }
+
+
+  @Post('enable')
+  enableProjects(@Body() body: EnableProjectsDto) {
+    return this.projectsService.enableProjects(body.projetos);
+  }
+
 }
 
 // @Controller('projects')
