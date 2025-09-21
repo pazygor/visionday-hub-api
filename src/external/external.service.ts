@@ -35,8 +35,7 @@ export class ExternalService {
         {
           crud: 'INSERT',
           dbname: 'MACHINES',
-          install: "PREPARE_INSTALL",
-          ONDUPLICATE: 'update',
+          install: "METRICS",
           data_info: data.servidores.map((srv) => {
             const pj = projMap.get(srv.projetoId)!;
             return {
