@@ -1,8 +1,8 @@
 {
-  "name": "monitoring-svs-api",
+  "name": "visionday-finance-api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "VisiondayFinance - Sistema de Gestão Financeira Multi-tenant",
+  "author": "Visionday Team",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

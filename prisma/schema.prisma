@@ -11,270 +11,208 @@ datasource db {
 }
 
 // ============================================
-// TABELAS CORE DO SISTEMA
+// VISIONDAY HUB - MULTI-SISTEMA
 // ============================================
 
-model Empresa {
-  id               Int         @id @default(autoincrement())
-  cnpj             String      @unique @db.VarChar(14)
-  razaoSocial      String      @map("razao_social")
-  nomeFantasia     String?     @map("nome_fantasia")
-  telefone         String?
-  email            String?
-  // Endereço
-  endereco         String
-  numero           String?
-  complemento      String?
-  bairro           String
-  cidade           String
-  uf               String      @db.VarChar(2)
-  cep              String      @db.VarChar(8)
-  // Configurações
-  ativo            Boolean     @default(true)
-  logo             String?     @db.Text
-  horarioAbertura  String?     @map("horario_abertura")
-  horarioFechamento String?    @map("horario_fechamento")
-  taxaEntrega      Decimal     @default(0) @db.Decimal(10, 2) @map("taxa_entrega")
-  tempoMedioEntrega Int?       @map("tempo_medio_entrega") // em minutos
-  // Timestamps
-  createdAt        DateTime    @default(now()) @map("created_at")
-  updatedAt        DateTime    @updatedAt @map("updated_at")
+// ============================================
+// 1. SISTEMAS E PRODUTOS
+// ============================================
+
+// Sistemas principais (Digital, Finance, Academy)
+model ProdutoSistema {
+  id                       Int                        @id @default(autoincrement())
+  codigo                   String                     @unique // digital, finance, academy
+  nome                     String                     @unique // VisionDay Digital, VisionDay Finance, VisionDay Academy
+  descricao                String?                    @db.Text
+  icone                    String?                    // lucide icon name
+  cor                      String?                    // tailwind gradient classes
+  path                     String                     // /digital/dashboard, /finance/dashboard
+  ativo                    Boolean                    @default(true)
+  ordem                    Int                        @default(0)
+  createdAt                DateTime                   @default(now()) @map("created_at")
+  updatedAt                DateTime                   @updatedAt @map("updated_at")
 
   // Relacionamentos
-  usuarios         Usuario[]
-  categorias       Categoria[]
-  produtos         Produto[]
-  pedidos          Pedido[]
-  gruposAdicionais GrupoAdicional[]
+  produtos                 Produto[]
+  usuarioSistemas          UsuarioProdutoSistema[]
 
-  @@map("empresa")
+  @@map("produto_sistema")
 }
 
-model Usuario {
-  id             Int          @id @default(autoincrement())
-  empresaId      Int          @map("empresa_id")
-  nome           String
-  email          String       @unique
-  senha          String
-  telefone       String?
-  cpf            String?      @unique @db.VarChar(11)
-  foto           String?      @db.Text
-  permissaoId    Int          @map("permissao_id")
-  ativo          Boolean      @default(true)
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-
-  // Relacionamentos
-  empresa        Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  permissao      Permissao    @relation(fields: [permissaoId], references: [id])
-  enderecos      Endereco[]
-  pedidos        Pedido[]
-
-  @@map("usuario")
-}
-
-model Permissao {
-  id        Int       @id @default(autoincrement())
-  nome      String    @unique // admin, cliente, entregador
-  descricao String?
-
-  usuarios  Usuario[]
-
-  @@map("permissao")
-}
-
-// ============================================
-// TABELAS DE DELIVERY
-// ============================================
-
-model Categoria {
-  id          Int       @id @default(autoincrement())
-  empresaId   Int       @map("empresa_id")
-  nome        String
-  descricao   String?   @db.Text
-  ordem       Int       @default(0)
-  ativo       Boolean   @default(true)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-
-  empresa     Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  produtos    Produto[]
-
-  @@map("categoria")
-}
-
+// Produtos/Módulos dentro de cada sistema
 model Produto {
-  id          Int         @id @default(autoincrement())
-  empresaId   Int         @map("empresa_id")
-  categoriaId Int         @map("categoria_id")
-  nome        String
-  descricao   String?     @db.Text
-  preco       Decimal     @db.Decimal(10, 2)
-  imagem      String?     @db.Text
-  disponivel  Boolean     @default(true)
-  destaque    Boolean     @default(false)
-  vendidoPorKg Boolean    @default(false) @map("vendido_por_kg")
-  ordem       Int         @default(0)
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id                       Int                        @id @default(autoincrement())
+  sistemaId                Int                        @map("sistema_id")
+  nome                     String                     // Ex: "Módulo Fiscal", "Gestão Financeira", "Cursos"
+  descricao                String?                    @db.Text
+  status                   String                     @default("ativo") // ativo, inativo, manutencao
+  ativo                    Boolean                    @default(true)
+  ordem                    Int                        @default(0)
+  createdAt                DateTime                   @default(now()) @map("created_at")
+  updatedAt                DateTime                   @updatedAt @map("updated_at")
 
-  empresa     Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  categoria   Categoria   @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
-  itensPedido ItemPedido[]
-  gruposProduto ProdutoGrupoAdicional[]
+  // Relacionamentos
+  sistema                  ProdutoSistema             @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  usuarioProdutos          UsuarioProduto[]
 
   @@map("produto")
 }
 
 // ============================================
-// SISTEMA DE ADICIONAIS
+// 2. USUÁRIOS E PERMISSÕES
 // ============================================
 
-// Grupo de Adicionais (ex: "Pontos da Carne", "Adicionais", "Bebidas")
-model GrupoAdicional {
-  id          Int       @id @default(autoincrement())
-  empresaId   Int       @map("empresa_id")
-  nome        String    // Ex: "Pontos da Carne", "Molhos", "Bebidas"
-  descricao   String?   @db.Text
-  minimo      Int       @default(0) // Quantidade mínima de adicionais
-  maximo      Int       @default(1) // Quantidade máxima de adicionais
-  obrigatorio Boolean   @default(false)
-  tipoPrecificacao String @default("somatorio") @map("tipo_precificacao") // somatorio, substitui
-  ordem       Int       @default(0)
-  ativo       Boolean   @default(true)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+model Usuario {
+  id                       Int                        @id @default(autoincrement())
+  nome                     String
+  email                    String                     @unique
+  senha                    String
+  telefone                 String?
+  cpf                      String?                    @unique @db.VarChar(11)
+  foto                     String?                    @db.Text
+  permissaoId              Int                        @map("permissao_id")
+  ativo                    Boolean                    @default(true)
+  createdAt                DateTime                   @default(now()) @map("created_at")
+  updatedAt                DateTime                   @updatedAt @map("updated_at")
 
-  empresa     Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  adicionais  Adicional[]
-  produtos    ProdutoGrupoAdicional[]
+  // Relacionamentos
+  permissao                Permissao                  @relation(fields: [permissaoId], references: [id])
+  usuarioSistemas          UsuarioProdutoSistema[]    // Sistemas que o usuário tem acesso
+  usuarioProdutos          UsuarioProduto[]           // Produtos específicos (controle granular)
+  clientesCriados          Cliente[]                  @relation("ClienteCriadoPor")
+  clientesAtualizados      Cliente[]                  @relation("ClienteAtualizadoPor")
+  contatosCriados          ClienteContato[]           @relation("ContatoCriadoPor")
+  dadosBancariosCriados    ClienteDadosBancarios[]    @relation("DadosBancariosCriadoPor")
 
-  @@map("grupo_adicional")
+  @@map("usuario")
 }
 
-// Adicionais dentro de cada grupo (ex: "Mal Passada", "Ao Ponto", "Bem Passada")
-model Adicional {
-  id              Int       @id @default(autoincrement())
-  grupoAdicionalId Int      @map("grupo_adicional_id")
-  nome            String    // Ex: "Mal Passada", "Bacon", "Queijo Extra"
-  descricao       String?   @db.Text
-  preco           Decimal   @default(0) @db.Decimal(10, 2)
-  ordem           Int       @default(0)
-  ativo           Boolean   @default(true)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+model Permissao {
+  id                       Int                        @id @default(autoincrement())
+  nome                     String                     @unique // admin, user, viewer
+  descricao                String?
+  nivel                    Int                        @default(0) // hierarquia de permissões
 
-  grupoAdicional  GrupoAdicional @relation(fields: [grupoAdicionalId], references: [id], onDelete: Cascade)
-  itensAdicional  ItemAdicional[]
+  // Relacionamentos
+  usuarios                 Usuario[]
 
-  @@map("adicional")
+  @@map("permissao")
 }
 
-// Relacionamento entre Produto e Grupo de Adicionais (um produto pode ter vários grupos)
-model ProdutoGrupoAdicional {
-  id              Int       @id @default(autoincrement())
-  produtoId       Int       @map("produto_id")
-  grupoAdicionalId Int      @map("grupo_adicional_id")
-  ordem           Int       @default(0) // Ordem de exibição no produto
-  createdAt       DateTime  @default(now()) @map("created_at")
+// Relacionamento: Usuário x Sistema (acesso aos sistemas principais)
+model UsuarioProdutoSistema {
+  id                       Int                        @id @default(autoincrement())
+  usuarioId                Int                        @map("usuario_id")
+  produtoSistemaId         Int                        @map("produto_sistema_id")
+  ativo                    Boolean                    @default(true)
+  dataAcesso               DateTime?                  @map("data_acesso") // Último acesso ao sistema
+  createdAt                DateTime                   @default(now()) @map("created_at")
 
-  produto         Produto   @relation(fields: [produtoId], references: [id], onDelete: Cascade)
-  grupoAdicional  GrupoAdicional @relation(fields: [grupoAdicionalId], references: [id], onDelete: Cascade)
+  // Relacionamentos
+  usuario                  Usuario                    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  produtoSistema           ProdutoSistema             @relation(fields: [produtoSistemaId], references: [id], onDelete: Cascade)
 
-  @@unique([produtoId, grupoAdicionalId])
-  @@map("produto_grupo_adicional")
+  @@unique([usuarioId, produtoSistemaId])
+  @@map("usuario_produto_sistema")
+}
+
+// Relacionamento: Usuário x Produto (controle granular de módulos)
+model UsuarioProduto {
+  id                       Int                        @id @default(autoincrement())
+  usuarioId                Int                        @map("usuario_id")
+  produtoId                Int                        @map("produto_id")
+  ativo                    Boolean                    @default(true)
+  createdAt                DateTime                   @default(now()) @map("created_at")
+
+  // Relacionamentos
+  usuario                  Usuario                    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  produto                  Produto                    @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, produtoId])
+  @@map("usuario_produto")
 }
 
 // ============================================
-// TABELAS DE PEDIDOS
+// 3. CLIENTES (Empresas gerenciadas pelo usuário)
 // ============================================
 
-model Endereco {
-  id          Int       @id @default(autoincrement())
-  usuarioId   Int       @map("usuario_id")
-  titulo      String    // "Casa", "Trabalho", etc.
-  cep         String    @db.VarChar(8)
-  logradouro  String
-  numero      String
-  complemento String?
-  bairro      String
-  cidade      String
-  uf          String    @db.VarChar(2)
-  referencia  String?   @db.Text
-  principal   Boolean   @default(false)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+model Cliente {
+  id                       Int                        @id @default(autoincrement())
+  codigo                   String                     @unique // CLI0000001, CLI0000002
+  cnpjCpf                  String                     @unique @map("cnpj_cpf") @db.VarChar(18) // Formatado: 00.000.000/0000-00 ou 000.000.000-00
+  cnpjCpfNumerico          String                     @unique @map("cnpj_cpf_numerico") @db.VarChar(14) // Apenas números
+  tipoDocumento            String                     @map("tipo_documento") @db.VarChar(4) // CNPJ ou CPF
+  razaoSocial              String                     @map("razao_social") @db.VarChar(255)
+  nomeFantasia             String?                    @map("nome_fantasia") @db.VarChar(255)
+  email                    String?                    @db.VarChar(255)
+  telefone                 String?                    @db.VarChar(20)
+  cidade                   String?                    @db.VarChar(100)
+  estado                   String?                    @db.Char(2) // UF
+  enderecoCompleto         String?                    @map("endereco_completo") @db.Text
+  status                   String                     @default("ATIVO") // ATIVO, INATIVO, SUSPENSO, BLOQUEADO
+  dataCadastro             DateTime                   @default(now()) @map("data_cadastro")
+  dataAtualizacao          DateTime                   @updatedAt @map("data_atualizacao")
+  createdBy                Int?                       @map("created_by")
+  updatedBy                Int?                       @map("updated_by")
 
-  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  pedidos     Pedido[]
+  // Relacionamentos
+  usuarioCriador           Usuario?                   @relation("ClienteCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  usuarioAtualizador       Usuario?                   @relation("ClienteAtualizadoPor", fields: [updatedBy], references: [id], onDelete: SetNull)
+  contatos                 ClienteContato[]
+  dadosBancarios           ClienteDadosBancarios[]
 
-  @@map("endereco")
+  @@index([cnpjCpfNumerico])
+  @@index([codigo])
+  @@index([status])
+  @@index([razaoSocial])
+  @@map("clientes")
 }
 
-model Pedido {
-  id                Int            @id @default(autoincrement())
-  empresaId         Int            @map("empresa_id")
-  usuarioId         Int            @map("usuario_id")
-  enderecoId        Int            @map("endereco_id")
-  numero            String         @unique
-  status            String         @default("pendente") // pendente, confirmado, preparando, saiu_entrega, entregue, cancelado
-  subtotal          Decimal        @db.Decimal(10, 2)
-  taxaEntrega       Decimal        @db.Decimal(10, 2) @map("taxa_entrega")
-  total             Decimal        @db.Decimal(10, 2)
-  formaPagamento    String         @map("forma_pagamento") // dinheiro, cartao, pix
-  observacoes       String?        @db.Text
-  motivoCancelamento String?       @db.Text @map("motivo_cancelamento")
-  tempoEstimado     Int?           @map("tempo_estimado") // em minutos
-  createdAt         DateTime       @default(now()) @map("created_at")
-  updatedAt         DateTime       @updatedAt @map("updated_at")
+// Contatos do Cliente
+model ClienteContato {
+  id                       Int                        @id @default(autoincrement())
+  clienteId                Int                        @map("cliente_id")
+  tipo                     String                     @default("PRINCIPAL") // PRINCIPAL, FINANCEIRO, TECNICO, COMERCIAL
+  nome                     String?                    @db.VarChar(255)
+  ddd                      String?                    @db.VarChar(3)
+  telefone                 String?                    @db.VarChar(20)
+  email                    String?                    @db.VarChar(255)
+  recebeNotificacoes       Boolean                    @default(false) @map("recebe_notificacoes")
+  ativo                    Boolean                    @default(true)
+  dataCadastro             DateTime                   @default(now()) @map("data_cadastro")
+  dataAtualizacao          DateTime                   @updatedAt @map("data_atualizacao")
+  createdBy                Int?                       @map("created_by")
 
-  empresa           Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  usuario           Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  endereco          Endereco       @relation(fields: [enderecoId], references: [id])
-  itens             ItemPedido[]
-  historico         HistoricoPedido[]
+  // Relacionamentos
+  cliente                  Cliente                    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  usuarioCriador           Usuario?                   @relation("ContatoCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
 
-  @@map("pedido")
+  @@index([clienteId])
+  @@index([tipo])
+  @@map("clientes_contatos")
 }
 
-model ItemPedido {
-  id          Int       @id @default(autoincrement())
-  pedidoId    Int       @map("pedido_id")
-  produtoId   Int       @map("produto_id")
-  quantidade  Int       @default(1)
-  precoUnitario Decimal @db.Decimal(10, 2) @map("preco_unitario")
-  subtotal    Decimal   @db.Decimal(10, 2)
-  observacoes String?   @db.Text
+// Dados Bancários do Cliente
+model ClienteDadosBancarios {
+  id                       Int                        @id @default(autoincrement())
+  clienteId                Int                        @map("cliente_id")
+  banco                    String                     @db.VarChar(100)
+  agencia                  String                     @db.VarChar(20)
+  conta                    String                     @db.VarChar(30)
+  tipoConta                String                     @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA
+  titular                  String?                    @db.VarChar(255)
+  cnpjCpfTitular           String?                    @map("cnpj_cpf_titular") @db.VarChar(18)
+  principal                Boolean                    @default(false)
+  ativo                    Boolean                    @default(true)
+  dataCadastro             DateTime                   @default(now()) @map("data_cadastro")
+  dataAtualizacao          DateTime                   @updatedAt @map("data_atualizacao")
+  createdBy                Int?                       @map("created_by")
 
-  pedido      Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-  produto     Produto   @relation(fields: [produtoId], references: [id])
-  adicionais  ItemAdicional[]
+  // Relacionamentos
+  cliente                  Cliente                    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  usuarioCriador           Usuario?                   @relation("DadosBancariosCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
 
-  @@map("item_pedido")
+  @@index([clienteId])
+  @@map("clientes_dados_bancarios")
 }
 
-// Adicionais escolhidos em cada item do pedido
-model ItemAdicional {
-  id            Int       @id @default(autoincrement())
-  itemPedidoId  Int       @map("item_pedido_id")
-  adicionalId   Int       @map("adicional_id")
-  quantidade    Int       @default(1)
-  preco         Decimal   @db.Decimal(10, 2) // Preço no momento do pedido
-
-  itemPedido    ItemPedido @relation(fields: [itemPedidoId], references: [id], onDelete: Cascade)
-  adicional     Adicional  @relation(fields: [adicionalId], references: [id])
-
-  @@map("item_adicional")
-}
-
-model HistoricoPedido {
-  id          Int       @id @default(autoincrement())
-  pedidoId    Int       @map("pedido_id")
-  status      String
-  observacao  String?   @db.Text
-  createdAt   DateTime  @default(now()) @map("created_at")
-
-  pedido      Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
-
-  @@map("historico_pedido")
-}
