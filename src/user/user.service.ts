@@ -55,7 +55,6 @@ export class UserService {
     return this.prisma.usuario.findMany({
       select: {
         id: true,
-        empresaId: true,
         nome: true,
         email: true,
         permissao: true,
@@ -72,7 +71,6 @@ export class UserService {
       where: { id },
       select: {
         id: true,
-        empresaId: true,
         nome: true,
         email: true,
         permissao: true,

@@ -14,17 +14,23 @@ export class AuthService {
   async validateUser(email: string, senha: string) {
     const user = await this.prisma.usuario.findUnique({
       where: { email },
-      // include: {
-      //   usuarioProdutoSistemas: { // relação usuario_produto_sistema
-      //     include: {
-      //       produtoSistema: true // pega os detalhes do produto
-      //     }
-      //   }
-      // }
+      include: {
+        permissao: true,
+        usuarioSistemas: {
+          where: { ativo: true },
+          include: {
+            produtoSistema: true
+          }
+        }
+      }
     });
 
     if (!user) {
       throw new UnauthorizedException('Email ou senha inválidos');
+    }
+
+    if (!user.ativo) {
+      throw new UnauthorizedException('Usuário inativo');
     }
 
     const isPasswordValid = await bcrypt.compare(senha, user.senha);
@@ -42,18 +48,25 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       nome: user.nome,
-      empresaId: user.empresaId,
       permissaoId: user.permissaoId,
     };
 
     const access_token = this.jwtService.sign(payload);
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
 
-    // Extrair só os produtosSistema para enviar no retorno
-    //const produtosSistema = user.usuarioProdutoSistemas.map(up => up.produtoSistema);
+    // Extrair códigos dos sistemas para o frontend
+    const systems = user.usuarioSistemas.map(us => us.produtoSistema.codigo);
 
     return {
-      access_token,
-      //produtosSistema,
+      token: access_token,
+      refreshToken: refresh_token,
+      user: {
+        id: user.id.toString(),
+        name: user.nome,
+        email: user.email,
+        role: user.permissao.nome,
+        systems: systems, // ['digital', 'finance', 'academy']
+      },
     };
   }
 }

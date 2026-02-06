@@ -7,562 +7,608 @@ async function main() {
   console.log('🌱 Iniciando seed do banco de dados...');
 
   // Limpar dados existentes (em ordem de dependência)
-  await prisma.itemAdicional.deleteMany();
-  await prisma.itemPedido.deleteMany();
-  await prisma.historicoPedido.deleteMany();
-  await prisma.pedido.deleteMany();
-  await prisma.endereco.deleteMany();
-  await prisma.produtoGrupoAdicional.deleteMany();
-  await prisma.adicional.deleteMany();
-  await prisma.grupoAdicional.deleteMany();
-  await prisma.produto.deleteMany();
-  await prisma.categoria.deleteMany();
+  await prisma.financeAlerta.deleteMany();
+  await prisma.financeConfiguracaoAlerta.deleteMany();
+  await prisma.financeAnexo.deleteMany();
+  await prisma.financeParcela.deleteMany();
+  await prisma.financeContaReceber.deleteMany();
+  await prisma.financeContaPagar.deleteMany();
+  await prisma.financeFatura.deleteMany();
+  await prisma.financeCliente.deleteMany();
+  await prisma.financeFornecedor.deleteMany();
+  await prisma.financeContaBancaria.deleteMany();
+  await prisma.financeCategoria.deleteMany();
+  await prisma.financeFormaPagamento.deleteMany();
+  await prisma.usuarioProduto.deleteMany();
+  await prisma.usuarioProdutoSistema.deleteMany();
+  await prisma.clienteDadosBancarios.deleteMany();
+  await prisma.clienteContato.deleteMany();
+  await prisma.cliente.deleteMany();
   await prisma.usuario.deleteMany();
-  await prisma.empresa.deleteMany();
+  await prisma.produto.deleteMany();
+  await prisma.produtoSistema.deleteMany();
   await prisma.permissao.deleteMany();
 
   console.log('✅ Dados antigos removidos');
 
-  // 1. Criar Permissões
-  const permissaoAdminGlobal = await prisma.permissao.create({
+  // ============================================
+  // 1. CRIAR PERMISSÕES
+  // ============================================
+  console.log('\n📋 Criando permissões...');
+  
+  const permissaoAdmin = await prisma.permissao.create({
     data: {
-      id: 1,
-      nome: 'admin_global',
-      descricao: 'Administrador global do sistema (dono do software)',
+      nome: 'admin',
+      descricao: 'Administrador do sistema com acesso total',
+      nivel: 100,
     },
   });
 
-  const permissaoAdminRestaurante = await prisma.permissao.create({
+  const permissaoUser = await prisma.permissao.create({
     data: {
-      id: 2,
-      nome: 'admin_restaurante',
-      descricao: 'Administrador do restaurante (dono do restaurante)',
+      nome: 'user',
+      descricao: 'Usuário padrão com acesso limitado',
+      nivel: 50,
     },
   });
 
-  const permissaoFuncionarioRestaurante = await prisma.permissao.create({
+  const permissaoViewer = await prisma.permissao.create({
     data: {
-      id: 3,
-      nome: 'funcionario_restaurante',
-      descricao: 'Funcionário do restaurante (acesso limitado)',
+      nome: 'viewer',
+      descricao: 'Visualizador - apenas leitura',
+      nivel: 10,
     },
   });
 
-  console.log('✅ Permissões criadas');
+  console.log(`   ✅ ${await prisma.permissao.count()} permissões criadas`);
 
-  // 2. Criar Empresas (Restaurantes)
-  const empresa1 = await prisma.empresa.create({
+  // ============================================
+  // 2. CRIAR SISTEMAS (ProdutoSistema)
+  // ============================================
+  console.log('\n🎯 Criando sistemas...');
+  
+  const sistemaDigital = await prisma.produtoSistema.create({
     data: {
-      cnpj: '12345678000190',
-      razaoSocial: 'Burger House Ltda',
-      nomeFantasia: 'Burger House',
-      telefone: '11987654321',
-      email: 'contato@burgerhouse.com',
-      endereco: 'Rua das Flores',
-      numero: '123',
-      bairro: 'Centro',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      cep: '01310100',
-      taxaEntrega: 8.50,
-      tempoMedioEntrega: 40,
-      horarioAbertura: '18:00',
-      horarioFechamento: '23:00',
+      codigo: 'digital',
+      nome: 'VisionDay Digital',
+      descricao: 'Plataforma de Contabilidade Digital completa para gestão fiscal e contábil',
+      icone: 'Building2',
+      cor: 'from-blue-500 to-blue-600',
+      path: '/digital/dashboard',
       ativo: true,
+      ordem: 1,
     },
   });
 
-  const empresa2 = await prisma.empresa.create({
+  const sistemaFinance = await prisma.produtoSistema.create({
     data: {
-      cnpj: '98765432000180',
-      razaoSocial: 'Pizzaria Bella Napoli Ltda',
-      nomeFantasia: 'Pizzaria Bella Napoli',
-      telefone: '11912345678',
-      email: 'contato@bellanapoli.com',
-      endereco: 'Avenida Paulista',
-      numero: '1000',
-      bairro: 'Bela Vista',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      cep: '01310200',
-      taxaEntrega: 10.00,
-      tempoMedioEntrega: 50,
-      horarioAbertura: '18:30',
-      horarioFechamento: '00:00',
+      codigo: 'finance',
+      nome: 'VisionDay Finance',
+      descricao: 'Plataforma Financeira para controle e gestão das suas finanças',
+      icone: 'DollarSign',
+      cor: 'from-green-500 to-green-600',
+      path: '/finance/dashboard',
       ativo: true,
+      ordem: 2,
     },
   });
 
-  console.log('✅ Empresas criadas');
-
-  // 3. Criar Usuários
-  const hashedPassword = await bcrypt.hash('123456', 10);
-
-  const adminGlobal = await prisma.usuario.create({
+  const sistemaAcademy = await prisma.produtoSistema.create({
     data: {
-      empresaId: empresa1.id,
-      nome: 'Admin Global',
-      email: 'admin@climbdelivery.com',
-      senha: hashedPassword,
-      telefone: '11900000000',
-      cpf: '00000000000',
-      permissaoId: permissaoAdminGlobal.id,
+      codigo: 'academy',
+      nome: 'VisionDay Academy',
+      descricao: 'Plataforma de Cursos e Capacitação profissional',
+      icone: 'GraduationCap',
+      cor: 'from-purple-500 to-purple-600',
+      path: '/academy/dashboard',
       ativo: true,
+      ordem: 3,
     },
   });
 
-  const adminRestaurante1 = await prisma.usuario.create({
+  console.log(`   ✅ ${await prisma.produtoSistema.count()} sistemas criados`);
+
+  // ============================================
+  // 3. CRIAR PRODUTOS (Módulos dentro dos sistemas)
+  // ============================================
+  console.log('\n📦 Criando produtos/módulos...');
+  
+  // Produtos do Digital
+  await prisma.produto.createMany({
+    data: [
+      {
+        sistemaId: sistemaDigital.id,
+        nome: 'Módulo Fiscal',
+        descricao: 'Gestão de obrigações fiscais e tributárias',
+        status: 'ativo',
+        ordem: 1,
+      },
+      {
+        sistemaId: sistemaDigital.id,
+        nome: 'Módulo Contábil',
+        descricao: 'Lançamentos e balancetes contábeis',
+        status: 'ativo',
+        ordem: 2,
+      },
+      {
+        sistemaId: sistemaDigital.id,
+        nome: 'Gestão de Clientes',
+        descricao: 'Cadastro e gestão de clientes',
+        status: 'ativo',
+        ordem: 3,
+      },
+    ],
+  });
+
+  // Produtos do Finance
+  await prisma.produto.createMany({
+    data: [
+      {
+        sistemaId: sistemaFinance.id,
+        nome: 'Gestão de Transações',
+        descricao: 'Controle de receitas e despesas',
+        status: 'ativo',
+        ordem: 1,
+      },
+      {
+        sistemaId: sistemaFinance.id,
+        nome: 'Faturamento',
+        descricao: 'Emissão e controle de faturas',
+        status: 'ativo',
+        ordem: 2,
+      },
+      {
+        sistemaId: sistemaFinance.id,
+        nome: 'Relatórios Financeiros',
+        descricao: 'Dashboards e relatórios financeiros',
+        status: 'ativo',
+        ordem: 3,
+      },
+    ],
+  });
+
+  // Produtos do Academy
+  await prisma.produto.createMany({
+    data: [
+      {
+        sistemaId: sistemaAcademy.id,
+        nome: 'Cursos',
+        descricao: 'Gestão de cursos e trilhas',
+        status: 'ativo',
+        ordem: 1,
+      },
+      {
+        sistemaId: sistemaAcademy.id,
+        nome: 'Certificados',
+        descricao: 'Emissão de certificados',
+        status: 'ativo',
+        ordem: 2,
+      },
+    ],
+  });
+
+  console.log(`   ✅ ${await prisma.produto.count()} produtos criados`);
+
+  // ============================================
+  // 4. CRIAR USUÁRIOS
+  // ============================================
+  console.log('\n👤 Criando usuários...');
+  
+  const senhaHash = await bcrypt.hash('Pazygor080@', 10);
+
+  // Usuário Admin com acesso a todos os sistemas
+  const userAdmin = await prisma.usuario.create({
     data: {
-      empresaId: empresa1.id,
-      nome: 'Carlos Silva - Dono Burger House',
-      email: 'dono@burgerhouse.com',
-      senha: hashedPassword,
+      nome: 'Dayane Paz',
+      email: 'dayane_paz@gmail.com',
+      senha: senhaHash,
       telefone: '11987654321',
       cpf: '12345678901',
-      permissaoId: permissaoAdminRestaurante.id,
+      permissaoId: permissaoAdmin.id,
       ativo: true,
     },
   });
 
-  const adminRestaurante2 = await prisma.usuario.create({
+  // Usuário comum com acesso apenas ao Finance
+  const userFinance = await prisma.usuario.create({
     data: {
-      empresaId: empresa2.id,
-      nome: 'Giuseppe Romano - Dono Bella Napoli',
-      email: 'dono@bellanapoli.com',
-      senha: hashedPassword,
+      nome: 'João Silva',
+      email: 'joao@exemplo.com',
+      senha: senhaHash,
       telefone: '11912345678',
       cpf: '98765432100',
-      permissaoId: permissaoAdminRestaurante.id,
+      permissaoId: permissaoUser.id,
       ativo: true,
     },
   });
 
-  const funcionario1 = await prisma.usuario.create({
+  // Usuário viewer com acesso ao Digital
+  const userDigital = await prisma.usuario.create({
     data: {
-      empresaId: empresa1.id,
-      nome: 'João Silva - Funcionário',
-      email: 'joao@burgerhouse.com',
-      senha: hashedPassword,
+      nome: 'Maria Santos',
+      email: 'maria@exemplo.com',
+      senha: senhaHash,
       telefone: '11999887766',
       cpf: '11122233344',
-      permissaoId: permissaoFuncionarioRestaurante.id,
+      permissaoId: permissaoViewer.id,
       ativo: true,
     },
   });
 
-  const funcionario2 = await prisma.usuario.create({
-    data: {
-      empresaId: empresa2.id,
-      nome: 'Maria Santos - Funcionária',
-      email: 'maria@bellanapoli.com',
-      senha: hashedPassword,
-      telefone: '11988776655',
-      cpf: '22233344455',
-      permissaoId: permissaoFuncionarioRestaurante.id,
-      ativo: true,
-    },
-  });
+  console.log(`   ✅ ${await prisma.usuario.count()} usuários criados`);
 
-  console.log('✅ Usuários criados');
-
-  // 4. Criar Endereços
-  const endereco1 = await prisma.endereco.create({
-    data: {
-      usuarioId: funcionario1.id,
-      titulo: 'Casa',
-      cep: '01310100',
-      logradouro: 'Rua das Palmeiras',
-      numero: '456',
-      bairro: 'Jardins',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      referencia: 'Próximo ao mercado',
-      principal: true,
-    },
-  });
-
-  const endereco2 = await prisma.endereco.create({
-    data: {
-      usuarioId: funcionario2.id,
-      titulo: 'Trabalho',
-      cep: '01310200',
-      logradouro: 'Avenida Brigadeiro',
-      numero: '789',
-      bairro: 'Centro',
-      cidade: 'São Paulo',
-      uf: 'SP',
-      referencia: 'Edifício comercial',
-      principal: true,
-    },
-  });
-
-  console.log('✅ Endereços criados');
-
-  // 5. Criar Categorias
-  const categoriaBurgers = await prisma.categoria.create({
-    data: {
-      empresaId: empresa1.id,
-      nome: 'Burgers',
-      descricao: 'Nossos deliciosos hambúrgueres artesanais',
-      ordem: 1,
-      ativo: true,
-    },
-  });
-
-  const categoriaBebidas = await prisma.categoria.create({
-    data: {
-      empresaId: empresa1.id,
-      nome: 'Bebidas',
-      descricao: 'Bebidas geladas e refrescantes',
-      ordem: 2,
-      ativo: true,
-    },
-  });
-
-  const categoriaPizzas = await prisma.categoria.create({
-    data: {
-      empresaId: empresa2.id,
-      nome: 'Pizzas Tradicionais',
-      descricao: 'Pizzas clássicas da casa',
-      ordem: 1,
-      ativo: true,
-    },
-  });
-
-  console.log('✅ Categorias criadas');
-
-  // 6. Criar Grupos de Adicionais
-  const grupoPontoCarne = await prisma.grupoAdicional.create({
-    data: {
-      empresaId: empresa1.id,
-      nome: 'Ponto da Carne',
-      descricao: 'Escolha o ponto da carne',
-      minimo: 1,
-      maximo: 1,
-      obrigatorio: true,
-      tipoPrecificacao: 'somatorio',
-      ordem: 1,
-      ativo: true,
-    },
-  });
-
-  const grupoAdicionais = await prisma.grupoAdicional.create({
-    data: {
-      empresaId: empresa1.id,
-      nome: 'Adicionais',
-      descricao: 'Adicione ingredientes extras',
-      minimo: 0,
-      maximo: 5,
-      obrigatorio: false,
-      tipoPrecificacao: 'somatorio',
-      ordem: 2,
-      ativo: true,
-    },
-  });
-
-  const grupoBordas = await prisma.grupoAdicional.create({
-    data: {
-      empresaId: empresa2.id,
-      nome: 'Bordas',
-      descricao: 'Escolha a borda da pizza',
-      minimo: 0,
-      maximo: 1,
-      obrigatorio: false,
-      tipoPrecificacao: 'somatorio',
-      ordem: 1,
-      ativo: true,
-    },
-  });
-
-  console.log('✅ Grupos de adicionais criados');
-
-  // 7. Criar Adicionais
-  await prisma.adicional.createMany({
+  // ============================================
+  // 5. ATRIBUIR SISTEMAS AOS USUÁRIOS
+  // ============================================
+  console.log('\n🔐 Atribuindo acessos aos sistemas...');
+  
+  // Admin tem acesso a todos os sistemas
+  await prisma.usuarioProdutoSistema.createMany({
     data: [
-      // Ponto da Carne
+      { usuarioId: userAdmin.id, produtoSistemaId: sistemaDigital.id, ativo: true },
+      { usuarioId: userAdmin.id, produtoSistemaId: sistemaFinance.id, ativo: true },
+      { usuarioId: userAdmin.id, produtoSistemaId: sistemaAcademy.id, ativo: true },
+    ],
+  });
+
+  // Usuário Finance tem acesso apenas ao Finance
+  await prisma.usuarioProdutoSistema.create({
+    data: {
+      usuarioId: userFinance.id,
+      produtoSistemaId: sistemaFinance.id,
+      ativo: true,
+    },
+  });
+
+  // Usuário Digital tem acesso apenas ao Digital
+  await prisma.usuarioProdutoSistema.create({
+    data: {
+      usuarioId: userDigital.id,
+      produtoSistemaId: sistemaDigital.id,
+      ativo: true,
+    },
+  });
+
+  console.log(`   ✅ ${await prisma.usuarioProdutoSistema.count()} acessos atribuídos`);
+
+  // ============================================
+  // 6. CRIAR CLIENTES DE EXEMPLO
+  // ============================================
+  console.log('\n🏢 Criando clientes...');
+  
+  const cliente1 = await prisma.cliente.create({
+    data: {
+      codigo: 'CLI0000001',
+      cnpjCpf: '12.345.678/0001-90',
+      cnpjCpfNumerico: '12345678000190',
+      tipoDocumento: 'CNPJ',
+      razaoSocial: 'Empresa Exemplo LTDA',
+      nomeFantasia: 'Exemplo Corp',
+      email: 'contato@exemplo.com.br',
+      telefone: '1133334444',
+      cidade: 'São Paulo',
+      estado: 'SP',
+      enderecoCompleto: 'Av. Paulista, 1000 - Bela Vista',
+      status: 'ATIVO',
+      createdBy: userAdmin.id,
+    },
+  });
+
+  const cliente2 = await prisma.cliente.create({
+    data: {
+      codigo: 'CLI0000002',
+      cnpjCpf: '98.765.432/0001-10',
+      cnpjCpfNumerico: '98765432000110',
+      tipoDocumento: 'CNPJ',
+      razaoSocial: 'Tech Solutions SA',
+      nomeFantasia: 'TechSol',
+      email: 'contato@techsol.com.br',
+      telefone: '1144445555',
+      cidade: 'Rio de Janeiro',
+      estado: 'RJ',
+      enderecoCompleto: 'Rua da Candelária, 100 - Centro',
+      status: 'ATIVO',
+      createdBy: userAdmin.id,
+    },
+  });
+
+  // Adicionar contatos aos clientes
+  await prisma.clienteContato.createMany({
+    data: [
       {
-        grupoAdicionalId: grupoPontoCarne.id,
-        nome: 'Mal Passada',
-        preco: 0,
-        ordem: 1,
+        clienteId: cliente1.id,
+        tipo: 'PRINCIPAL',
+        nome: 'Carlos Alberto',
+        ddd: '11',
+        telefone: '987654321',
+        email: 'carlos@exemplo.com.br',
+        recebeNotificacoes: true,
         ativo: true,
+        createdBy: userAdmin.id,
       },
       {
-        grupoAdicionalId: grupoPontoCarne.id,
-        nome: 'Ao Ponto',
-        preco: 0,
-        ordem: 2,
+        clienteId: cliente1.id,
+        tipo: 'FINANCEIRO',
+        nome: 'Ana Paula',
+        ddd: '11',
+        telefone: '987654322',
+        email: 'financeiro@exemplo.com.br',
+        recebeNotificacoes: true,
         ativo: true,
+        createdBy: userAdmin.id,
       },
       {
-        grupoAdicionalId: grupoPontoCarne.id,
-        nome: 'Bem Passada',
-        preco: 0,
-        ordem: 3,
+        clienteId: cliente2.id,
+        tipo: 'PRINCIPAL',
+        nome: 'Roberto Lima',
+        ddd: '21',
+        telefone: '987654323',
+        email: 'roberto@techsol.com.br',
+        recebeNotificacoes: true,
         ativo: true,
-      },
-      // Adicionais
-      {
-        grupoAdicionalId: grupoAdicionais.id,
-        nome: 'Bacon',
-        preco: 4.00,
-        ordem: 1,
-        ativo: true,
-      },
-      {
-        grupoAdicionalId: grupoAdicionais.id,
-        nome: 'Queijo Extra',
-        preco: 3.50,
-        ordem: 2,
-        ativo: true,
-      },
-      {
-        grupoAdicionalId: grupoAdicionais.id,
-        nome: 'Cebola Caramelizada',
-        preco: 2.50,
-        ordem: 3,
-        ativo: true,
-      },
-      {
-        grupoAdicionalId: grupoAdicionais.id,
-        nome: 'Ovo',
-        preco: 2.00,
-        ordem: 4,
-        ativo: true,
-      },
-      // Bordas
-      {
-        grupoAdicionalId: grupoBordas.id,
-        nome: 'Borda Catupiry',
-        preco: 8.00,
-        ordem: 1,
-        ativo: true,
-      },
-      {
-        grupoAdicionalId: grupoBordas.id,
-        nome: 'Borda Cheddar',
-        preco: 8.00,
-        ordem: 2,
-        ativo: true,
+        createdBy: userAdmin.id,
       },
     ],
   });
 
-  console.log('✅ Adicionais criados');
-
-  // 8. Criar Produtos
-  const burger1 = await prisma.produto.create({
-    data: {
-      empresaId: empresa1.id,
-      categoriaId: categoriaBurgers.id,
-      nome: 'X-Bacon',
-      descricao: 'Hambúrguer artesanal 180g, bacon crocante, queijo cheddar, alface, tomate',
-      preco: 28.90,
-      disponivel: true,
-      destaque: true,
-      ordem: 1,
-    },
-  });
-
-  const burger2 = await prisma.produto.create({
-    data: {
-      empresaId: empresa1.id,
-      categoriaId: categoriaBurgers.id,
-      nome: 'X-Tudo',
-      descricao: 'Hambúrguer 180g, bacon, queijo, presunto, ovo, alface, tomate, milho',
-      preco: 32.90,
-      disponivel: true,
-      destaque: true,
-      ordem: 2,
-    },
-  });
-
-  const bebida1 = await prisma.produto.create({
-    data: {
-      empresaId: empresa1.id,
-      categoriaId: categoriaBebidas.id,
-      nome: 'Coca-Cola 350ml',
-      descricao: 'Refrigerante gelado',
-      preco: 6.00,
-      disponivel: true,
-      ordem: 1,
-    },
-  });
-
-  const pizza1 = await prisma.produto.create({
-    data: {
-      empresaId: empresa2.id,
-      categoriaId: categoriaPizzas.id,
-      nome: 'Pizza Margherita',
-      descricao: 'Molho de tomate, mussarela, tomate, manjericão',
-      preco: 45.00,
-      disponivel: true,
-      destaque: true,
-      ordem: 1,
-    },
-  });
-
-  const pizza2 = await prisma.produto.create({
-    data: {
-      empresaId: empresa2.id,
-      categoriaId: categoriaPizzas.id,
-      nome: 'Pizza Calabresa',
-      descricao: 'Molho de tomate, mussarela, calabresa, cebola',
-      preco: 48.00,
-      disponivel: true,
-      ordem: 2,
-    },
-  });
-
-  console.log('✅ Produtos criados');
-
-  // 9. Associar Grupos de Adicionais aos Produtos
-  await prisma.produtoGrupoAdicional.createMany({
+  // Adicionar dados bancários
+  await prisma.clienteDadosBancarios.createMany({
     data: [
-      { produtoId: burger1.id, grupoAdicionalId: grupoPontoCarne.id, ordem: 1 },
-      { produtoId: burger1.id, grupoAdicionalId: grupoAdicionais.id, ordem: 2 },
-      { produtoId: burger2.id, grupoAdicionalId: grupoPontoCarne.id, ordem: 1 },
-      { produtoId: burger2.id, grupoAdicionalId: grupoAdicionais.id, ordem: 2 },
-      { produtoId: pizza1.id, grupoAdicionalId: grupoBordas.id, ordem: 1 },
-      { produtoId: pizza2.id, grupoAdicionalId: grupoBordas.id, ordem: 1 },
+      {
+        clienteId: cliente1.id,
+        banco: 'Banco do Brasil',
+        agencia: '1234',
+        conta: '12345-6',
+        tipoConta: 'CORRENTE',
+        titular: 'Empresa Exemplo LTDA',
+        cnpjCpfTitular: '12.345.678/0001-90',
+        principal: true,
+        ativo: true,
+        createdBy: userAdmin.id,
+      },
+      {
+        clienteId: cliente2.id,
+        banco: 'Itaú',
+        agencia: '5678',
+        conta: '98765-4',
+        tipoConta: 'CORRENTE',
+        titular: 'Tech Solutions SA',
+        cnpjCpfTitular: '98.765.432/0001-10',
+        principal: true,
+        ativo: true,
+        createdBy: userAdmin.id,
+      },
     ],
   });
 
-  console.log('✅ Grupos associados aos produtos');
+  console.log(`   ✅ ${await prisma.cliente.count()} clientes criados`);
+  console.log(`   ✅ ${await prisma.clienteContato.count()} contatos criados`);
+  console.log(`   ✅ ${await prisma.clienteDadosBancarios.count()} contas bancárias criadas`);
 
-  // 10. Criar Pedidos de Exemplo
-  const pedido1 = await prisma.pedido.create({
+  // ============================================
+  // 6. FINANCE - FORMAS DE PAGAMENTO
+  // ============================================
+  console.log('\n💳 Criando formas de pagamento...');
+  
+  const formasPagamento = await Promise.all([
+    prisma.financeFormaPagamento.create({
+      data: { nome: 'PIX', tipo: 'A_VISTA', ativo: true },
+    }),
+    prisma.financeFormaPagamento.create({
+      data: { nome: 'Boleto Bancário', tipo: 'A_VISTA', ativo: true },
+    }),
+    prisma.financeFormaPagamento.create({
+      data: { nome: 'Transferência Bancária', tipo: 'A_VISTA', ativo: true },
+    }),
+    prisma.financeFormaPagamento.create({
+      data: { nome: 'Cartão de Crédito', tipo: 'PARCELADO', ativo: true },
+    }),
+    prisma.financeFormaPagamento.create({
+      data: { nome: 'Cartão de Débito', tipo: 'A_VISTA', ativo: true },
+    }),
+    prisma.financeFormaPagamento.create({
+      data: { nome: 'Dinheiro', tipo: 'A_VISTA', ativo: true },
+    }),
+  ]);
+
+  console.log(`   ✅ ${formasPagamento.length} formas de pagamento criadas`);
+
+  // ============================================
+  // 7. FINANCE - CATEGORIAS GLOBAIS
+  // ============================================
+  console.log('\n📁 Criando categorias financeiras globais...');
+  
+  const categoriasReceita = await Promise.all([
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Vendas', 
+        tipo: 'RECEITA', 
+        cor: '#10B981', 
+        icone: 'DollarSign',
+        descricao: 'Receitas de vendas de produtos/serviços',
+        ativo: true 
+      },
+    }),
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Serviços', 
+        tipo: 'RECEITA', 
+        cor: '#3B82F6', 
+        icone: 'Briefcase',
+        descricao: 'Receitas de prestação de serviços',
+        ativo: true 
+      },
+    }),
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Comissões', 
+        tipo: 'RECEITA', 
+        cor: '#8B5CF6', 
+        icone: 'TrendingUp',
+        descricao: 'Comissões recebidas',
+        ativo: true 
+      },
+    }),
+  ]);
+
+  const categoriasDespesa = await Promise.all([
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Aluguel', 
+        tipo: 'DESPESA', 
+        cor: '#EF4444', 
+        icone: 'Home',
+        descricao: 'Pagamentos de aluguel',
+        ativo: true 
+      },
+    }),
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Salários', 
+        tipo: 'DESPESA', 
+        cor: '#F59E0B', 
+        icone: 'Users',
+        descricao: 'Folha de pagamento',
+        ativo: true 
+      },
+    }),
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Fornecedores', 
+        tipo: 'DESPESA', 
+        cor: '#EC4899', 
+        icone: 'Package',
+        descricao: 'Pagamentos a fornecedores',
+        ativo: true 
+      },
+    }),
+    prisma.financeCategoria.create({
+      data: { 
+        nome: 'Impostos e Taxas', 
+        tipo: 'DESPESA', 
+        cor: '#6366F1', 
+        icone: 'FileText',
+        descricao: 'Impostos, taxas e tributos',
+        ativo: true 
+      },
+    }),
+  ]);
+
+  console.log(`   ✅ ${categoriasReceita.length} categorias de receita criadas`);
+  console.log(`   ✅ ${categoriasDespesa.length} categorias de despesa criadas`);
+
+  // ============================================
+  // 8. FINANCE - DADOS DE TESTE PARA DAYANE
+  // ============================================
+  console.log('\n💰 Criando dados de teste do Finance para Dayane...');
+
+  // Conta Bancária
+  const contaBancaria = await prisma.financeContaBancaria.create({
     data: {
-      empresaId: empresa1.id,
-      usuarioId: funcionario1.id,
-      enderecoId: endereco1.id,
-      numero: 'PED-001',
-      status: 'entregue',
-      subtotal: 28.90,
-      taxaEntrega: 8.50,
-      total: 37.40,
-      formaPagamento: 'pix',
-      tempoEstimado: 40,
-      itens: {
-        create: [
-          {
-            produtoId: burger1.id,
-            quantidade: 1,
-            precoUnitario: 28.90,
-            subtotal: 28.90,
-          },
-        ],
-      },
-      historico: {
-        create: [
-          { status: 'pendente', observacao: 'Pedido criado' },
-          { status: 'confirmado', observacao: 'Pedido confirmado pelo restaurante' },
-          { status: 'preparando', observacao: 'Pedido em preparo' },
-          { status: 'saiu_entrega', observacao: 'Saiu para entrega' },
-          { status: 'entregue', observacao: 'Pedido entregue' },
-        ],
-      },
+      usuarioId: userAdmin.id,
+      banco: 'Banco do Brasil',
+      agencia: '1234-5',
+      conta: '12345-6',
+      tipoConta: 'CORRENTE',
+      saldoInicial: 10000.00,
+      saldoAtual: 10000.00,
+      chavePix: 'dayane_paz@gmail.com',
+      principal: true,
+      ativo: true,
     },
   });
 
-  const adicionais = await prisma.adicional.findMany({
-    where: {
-      grupoAdicionalId: grupoAdicionais.id,
-    },
-    take: 2,
-  });
-
-  const pedido2 = await prisma.pedido.create({
+  // Clientes do Finance
+  const financeCliente1 = await prisma.financeCliente.create({
     data: {
-      empresaId: empresa1.id,
-      usuarioId: funcionario1.id,
-      enderecoId: endereco1.id,
-      numero: 'PED-002',
-      status: 'preparando',
-      subtotal: 39.90,
-      taxaEntrega: 8.50,
-      total: 48.40,
-      formaPagamento: 'cartao',
-      observacoes: 'Sem cebola, por favor',
-      tempoEstimado: 40,
-      itens: {
-        create: [
-          {
-            produtoId: burger2.id,
-            quantidade: 1,
-            precoUnitario: 32.90,
-            subtotal: 39.90,
-            observacoes: 'Sem cebola',
-            adicionais: {
-              create: adicionais.map((adic) => ({
-                adicionalId: adic.id,
-                quantidade: 1,
-                preco: adic.preco,
-              })),
-            },
-          },
-        ],
-      },
-      historico: {
-        create: [
-          { status: 'pendente', observacao: 'Pedido criado' },
-          { status: 'confirmado', observacao: 'Pedido confirmado' },
-          { status: 'preparando', observacao: 'Em preparo' },
-        ],
-      },
+      usuarioId: userAdmin.id,
+      nome: 'Tech Solutions LTDA',
+      cpfCnpj: '12.345.678/0001-90',
+      email: 'contato@techsolutions.com',
+      telefone: '(11) 98765-4321',
+      ativo: true,
     },
   });
 
-  const pedido3 = await prisma.pedido.create({
+  const financeCliente2 = await prisma.financeCliente.create({
     data: {
-      empresaId: empresa2.id,
-      usuarioId: funcionario2.id,
-      enderecoId: endereco2.id,
-      numero: 'PED-003',
-      status: 'pendente',
-      subtotal: 45.00,
-      taxaEntrega: 10.00,
-      total: 55.00,
-      formaPagamento: 'dinheiro',
-      tempoEstimado: 50,
-      itens: {
-        create: [
-          {
-            produtoId: pizza1.id,
-            quantidade: 1,
-            precoUnitario: 45.00,
-            subtotal: 45.00,
-          },
-        ],
-      },
-      historico: {
-        create: [{ status: 'pendente', observacao: 'Pedido criado' }],
-      },
+      usuarioId: userAdmin.id,
+      nome: 'ABC Comércio S.A.',
+      cpfCnpj: '98.765.432/0001-10',
+      email: 'financeiro@abc.com.br',
+      telefone: '(11) 91234-5678',
+      ativo: true,
     },
   });
 
-  console.log('✅ Pedidos criados');
+  // Fornecedor
+  const fornecedor1 = await prisma.financeFornecedor.create({
+    data: {
+      usuarioId: userAdmin.id,
+      nome: 'TechSupply Informática',
+      cpfCnpj: '11.222.333/0001-44',
+      email: 'vendas@techsupply.com',
+      telefone: '(11) 3333-4444',
+      ativo: true,
+    },
+  });
 
-  console.log('\n🎉 Seed concluído com sucesso!');
-  console.log('\n📊 Resumo:');
+  console.log('   ✅ Conta bancária criada');
+  console.log('   ✅ 2 clientes criados');
+  console.log('   ✅ 1 fornecedor criado');
+
+  // Configuração de Alertas
+  await prisma.financeConfiguracaoAlerta.create({
+    data: {
+      usuarioId: userAdmin.id,
+      contasVencerAtivo: true,
+      contasVencerDias: 3,
+      contasVencidasAtivo: true,
+      limiteContaBancariaAtivo: false,
+      emailNotificacao: true,
+      notificacaoSistema: true,
+    },
+  });
+
+  console.log('   ✅ Configuração de alertas criada');
+
+  // ============================================
+  // RESUMO
+  // ============================================
+  console.log('\n' + '='.repeat(60));
+  console.log('✅ SEED CONCLUÍDO COM SUCESSO!');
+  console.log('='.repeat(60));
+  console.log('\n📊 Resumo do banco de dados:');
   console.log(`   - ${await prisma.permissao.count()} permissões`);
-  console.log(`   - ${await prisma.empresa.count()} empresas`);
+  console.log(`   - ${await prisma.produtoSistema.count()} sistemas`);
+  console.log(`   - ${await prisma.produto.count()} produtos/módulos`);
   console.log(`   - ${await prisma.usuario.count()} usuários`);
-  console.log(`   - ${await prisma.categoria.count()} categorias`);
-  console.log(`   - ${await prisma.produto.count()} produtos`);
-  console.log(`   - ${await prisma.grupoAdicional.count()} grupos de adicionais`);
-  console.log(`   - ${await prisma.adicional.count()} adicionais`);
-  console.log(`   - ${await prisma.endereco.count()} endereços`);
-  console.log(`   - ${await prisma.pedido.count()} pedidos`);
+  console.log(`   - ${await prisma.usuarioProdutoSistema.count()} acessos a sistemas`);
+  console.log(`   - ${await prisma.cliente.count()} clientes (Digital)`);
+  console.log(`   - ${await prisma.clienteContato.count()} contatos`);
+  console.log(`   - ${await prisma.clienteDadosBancarios.count()} contas bancárias (Digital)`);
+  console.log(`\n💰 Finance:`);
+  console.log(`   - ${await prisma.financeFormaPagamento.count()} formas de pagamento`);
+  console.log(`   - ${await prisma.financeCategoria.count()} categorias`);
+  console.log(`   - ${await prisma.financeContaBancaria.count()} contas bancárias`);
+  console.log(`   - ${await prisma.financeCliente.count()} clientes`);
+  console.log(`   - ${await prisma.financeFornecedor.count()} fornecedores`);
+  console.log(`   - ${await prisma.financeConfiguracaoAlerta.count()} configurações de alerta`);
+  
   console.log('\n👤 Usuários de teste:');
-  console.log('   🔐 ADMIN GLOBAL:');
-  console.log('      - admin@climbdelivery.com (senha: 123456)');
-  console.log('\n   👨‍💼 ADMIN RESTAURANTE:');
-  console.log('      - dono@burgerhouse.com (senha: 123456)');
-  console.log('      - dono@bellanapoli.com (senha: 123456)');
-  console.log('\n   👥 FUNCIONÁRIOS:');
-  console.log('      - joao@burgerhouse.com (senha: 123456)');
-  console.log('      - maria@bellanapoli.com (senha: 123456)');
+  console.log('   1. Admin (acesso total):');
+  console.log('      Email: dayane_paz@gmail.com');
+  console.log('      Senha: Pazygor080@');
+  console.log('      Sistemas: Digital, Finance, Academy');
+  console.log('   2. Usuário Finance:');
+  console.log('      Email: joao@exemplo.com');
+  console.log('      Senha: Pazygor080@');
+  console.log('      Sistemas: Finance');
+  console.log('   3. Usuário Digital:');
+  console.log('      Email: maria@exemplo.com');
+  console.log('      Senha: Pazygor080@');
+  console.log('      Sistemas: Digital');
+  console.log('='.repeat(60) + '\n');
 }
 
 main()
