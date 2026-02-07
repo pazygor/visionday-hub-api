@@ -11,6 +11,21 @@ datasource db {
 }
 
 // ============================================
+// ENUMS
+// ============================================
+
+enum TipoReceita {
+  CLIENTE // Receita de cliente (B2B)
+  SALARIO // Salário recebido
+  FREELANCE // Trabalho freelance
+  ALUGUEL // Aluguel recebido
+  VENDA // Venda de produto/serviço
+  INVESTIMENTO // Retorno de investimento
+  BONIFICACAO // Bonificação/Premiação
+  OUTRO // Outros tipos
+}
+
+// ============================================
 // VISIONDAY HUB - MULTI-SISTEMA
 // ============================================
 
@@ -20,40 +35,40 @@ datasource db {
 
 // Sistemas principais (Digital, Finance, Academy)
 model ProdutoSistema {
-  id                       Int                        @id @default(autoincrement())
-  codigo                   String                     @unique // digital, finance, academy
-  nome                     String                     @unique // VisionDay Digital, VisionDay Finance, VisionDay Academy
-  descricao                String?                    @db.Text
-  icone                    String?                    // lucide icon name
-  cor                      String?                    // tailwind gradient classes
-  path                     String                     // /digital/dashboard, /finance/dashboard
-  ativo                    Boolean                    @default(true)
-  ordem                    Int                        @default(0)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  codigo    String   @unique // digital, finance, academy
+  nome      String   @unique // VisionDay Digital, VisionDay Finance, VisionDay Academy
+  descricao String?  @db.Text
+  icone     String? // lucide icon name
+  cor       String? // tailwind gradient classes
+  path      String // /digital/dashboard, /finance/dashboard
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  produtos                 Produto[]
-  usuarioSistemas          UsuarioProdutoSistema[]
+  produtos        Produto[]
+  usuarioSistemas UsuarioProdutoSistema[]
 
   @@map("produto_sistema")
 }
 
 // Produtos/Módulos dentro de cada sistema
 model Produto {
-  id                       Int                        @id @default(autoincrement())
-  sistemaId                Int                        @map("sistema_id")
-  nome                     String                     // Ex: "Módulo Fiscal", "Gestão Financeira", "Cursos"
-  descricao                String?                    @db.Text
-  status                   String                     @default("ativo") // ativo, inativo, manutencao
-  ativo                    Boolean                    @default(true)
-  ordem                    Int                        @default(0)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  sistemaId Int      @map("sistema_id")
+  nome      String // Ex: "Módulo Fiscal", "Gestão Financeira", "Cursos"
+  descricao String?  @db.Text
+  status    String   @default("ativo") // ativo, inativo, manutencao
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  sistema                  ProdutoSistema             @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
-  usuarioProdutos          UsuarioProduto[]
+  sistema         ProdutoSistema   @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  usuarioProdutos UsuarioProduto[]
 
   @@map("produto")
 }
@@ -63,71 +78,71 @@ model Produto {
 // ============================================
 
 model Usuario {
-  id                       Int                        @id @default(autoincrement())
-  nome                     String
-  email                    String                     @unique
-  senha                    String
-  telefone                 String?
-  cpf                      String?                    @unique @db.VarChar(11)
-  foto                     String?                    @db.Text
-  permissaoId              Int                        @map("permissao_id")
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  nome        String
+  email       String   @unique
+  senha       String
+  telefone    String?
+  cpf         String?  @unique @db.VarChar(11)
+  foto        String?  @db.Text
+  permissaoId Int      @map("permissao_id")
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  permissao                Permissao                  @relation(fields: [permissaoId], references: [id])
-  usuarioSistemas          UsuarioProdutoSistema[]    // Sistemas que o usuário tem acesso
-  usuarioProdutos          UsuarioProduto[]           // Produtos específicos (controle granular)
-  clientesCriados          Cliente[]                  @relation("ClienteCriadoPor")
-  clientesAtualizados      Cliente[]                  @relation("ClienteAtualizadoPor")
-  contatosCriados          ClienteContato[]           @relation("ContatoCriadoPor")
-  dadosBancariosCriados    ClienteDadosBancarios[]    @relation("DadosBancariosCriadoPor")
-  
+  permissao             Permissao               @relation(fields: [permissaoId], references: [id])
+  usuarioSistemas       UsuarioProdutoSistema[] // Sistemas que o usuário tem acesso
+  usuarioProdutos       UsuarioProduto[] // Produtos específicos (controle granular)
+  clientesCriados       Cliente[]               @relation("ClienteCriadoPor")
+  clientesAtualizados   Cliente[]               @relation("ClienteAtualizadoPor")
+  contatosCriados       ClienteContato[]        @relation("ContatoCriadoPor")
+  dadosBancariosCriados ClienteDadosBancarios[] @relation("DadosBancariosCriadoPor")
+
   // Finance - Relacionamentos
-  financeCategorias        FinanceCategoria[]         @relation("FinanceCategoriasUsuario")
-  financeContasBancarias   FinanceContaBancaria[]     @relation("FinanceContasBancariasUsuario")
-  financeClientes          FinanceCliente[]           @relation("FinanceClientesUsuario")
-  financeFornecedores      FinanceFornecedor[]        @relation("FinanceFornecedoresUsuario")
-  financeContasReceber     FinanceContaReceber[]      @relation("FinanceContasReceberUsuario")
-  financeContasPagar       FinanceContaPagar[]        @relation("FinanceContasPagarUsuario")
-  financeFaturas           FinanceFatura[]            @relation("FinanceFaturasUsuario")
-  financeAlertas           FinanceAlerta[]            @relation("FinanceAlertasUsuario")
+  financeCategorias         FinanceCategoria[]         @relation("FinanceCategoriasUsuario")
+  financeContasBancarias    FinanceContaBancaria[]     @relation("FinanceContasBancariasUsuario")
+  financeClientes           FinanceCliente[]           @relation("FinanceClientesUsuario")
+  financeFornecedores       FinanceFornecedor[]        @relation("FinanceFornecedoresUsuario")
+  financeContasReceber      FinanceContaReceber[]      @relation("FinanceContasReceberUsuario")
+  financeContasPagar        FinanceContaPagar[]        @relation("FinanceContasPagarUsuario")
+  financeFaturas            FinanceFatura[]            @relation("FinanceFaturasUsuario")
+  financeAlertas            FinanceAlerta[]            @relation("FinanceAlertasUsuario")
   financeConfiguracaoAlerta FinanceConfiguracaoAlerta? @relation("FinanceConfiguracaoAlertaUsuario")
-  contasReceberCriadas     FinanceContaReceber[]      @relation("ContaReceberCriadaPor")
-  contasReceberAtualizadas FinanceContaReceber[]      @relation("ContaReceberAtualizadaPor")
-  contasPagarCriadas       FinanceContaPagar[]        @relation("ContaPagarCriadaPor")
-  contasPagarAtualizadas   FinanceContaPagar[]        @relation("ContaPagarAtualizadaPor")
-  faturasCriadas           FinanceFatura[]            @relation("FaturaCriadaPor")
-  anexosCriados            FinanceAnexo[]             @relation("AnexoCriadoPor")
+  contasReceberCriadas      FinanceContaReceber[]      @relation("ContaReceberCriadaPor")
+  contasReceberAtualizadas  FinanceContaReceber[]      @relation("ContaReceberAtualizadaPor")
+  contasPagarCriadas        FinanceContaPagar[]        @relation("ContaPagarCriadaPor")
+  contasPagarAtualizadas    FinanceContaPagar[]        @relation("ContaPagarAtualizadaPor")
+  faturasCriadas            FinanceFatura[]            @relation("FaturaCriadaPor")
+  anexosCriados             FinanceAnexo[]             @relation("AnexoCriadoPor")
 
   @@map("usuario")
 }
 
 model Permissao {
-  id                       Int                        @id @default(autoincrement())
-  nome                     String                     @unique // admin, user, viewer
-  descricao                String?
-  nivel                    Int                        @default(0) // hierarquia de permissões
+  id        Int     @id @default(autoincrement())
+  nome      String  @unique // admin, user, viewer
+  descricao String?
+  nivel     Int     @default(0) // hierarquia de permissões
 
   // Relacionamentos
-  usuarios                 Usuario[]
+  usuarios Usuario[]
 
   @@map("permissao")
 }
 
 // Relacionamento: Usuário x Sistema (acesso aos sistemas principais)
 model UsuarioProdutoSistema {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  produtoSistemaId         Int                        @map("produto_sistema_id")
-  ativo                    Boolean                    @default(true)
-  dataAcesso               DateTime?                  @map("data_acesso") // Último acesso ao sistema
-  createdAt                DateTime                   @default(now()) @map("created_at")
+  id               Int       @id @default(autoincrement())
+  usuarioId        Int       @map("usuario_id")
+  produtoSistemaId Int       @map("produto_sistema_id")
+  ativo            Boolean   @default(true)
+  dataAcesso       DateTime? @map("data_acesso") // Último acesso ao sistema
+  createdAt        DateTime  @default(now()) @map("created_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  produtoSistema           ProdutoSistema             @relation(fields: [produtoSistemaId], references: [id], onDelete: Cascade)
+  usuario        Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  produtoSistema ProdutoSistema @relation(fields: [produtoSistemaId], references: [id], onDelete: Cascade)
 
   @@unique([usuarioId, produtoSistemaId])
   @@map("usuario_produto_sistema")
@@ -135,15 +150,15 @@ model UsuarioProdutoSistema {
 
 // Relacionamento: Usuário x Produto (controle granular de módulos)
 model UsuarioProduto {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  produtoId                Int                        @map("produto_id")
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @map("usuario_id")
+  produtoId Int      @map("produto_id")
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  produto                  Produto                    @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
 
   @@unique([usuarioId, produtoId])
   @@map("usuario_produto")
@@ -154,29 +169,29 @@ model UsuarioProduto {
 // ============================================
 
 model Cliente {
-  id                       Int                        @id @default(autoincrement())
-  codigo                   String                     @unique // CLI0000001, CLI0000002
-  cnpjCpf                  String                     @unique @map("cnpj_cpf") @db.VarChar(18) // Formatado: 00.000.000/0000-00 ou 000.000.000-00
-  cnpjCpfNumerico          String                     @unique @map("cnpj_cpf_numerico") @db.VarChar(14) // Apenas números
-  tipoDocumento            String                     @map("tipo_documento") @db.VarChar(4) // CNPJ ou CPF
-  razaoSocial              String                     @map("razao_social") @db.VarChar(255)
-  nomeFantasia             String?                    @map("nome_fantasia") @db.VarChar(255)
-  email                    String?                    @db.VarChar(255)
-  telefone                 String?                    @db.VarChar(20)
-  cidade                   String?                    @db.VarChar(100)
-  estado                   String?                    @db.Char(2) // UF
-  enderecoCompleto         String?                    @map("endereco_completo") @db.Text
-  status                   String                     @default("ATIVO") // ATIVO, INATIVO, SUSPENSO, BLOQUEADO
-  dataCadastro             DateTime                   @default(now()) @map("data_cadastro")
-  dataAtualizacao          DateTime                   @updatedAt @map("data_atualizacao")
-  createdBy                Int?                       @map("created_by")
-  updatedBy                Int?                       @map("updated_by")
+  id               Int      @id @default(autoincrement())
+  codigo           String   @unique // CLI0000001, CLI0000002
+  cnpjCpf          String   @unique @map("cnpj_cpf") @db.VarChar(18) // Formatado: 00.000.000/0000-00 ou 000.000.000-00
+  cnpjCpfNumerico  String   @unique @map("cnpj_cpf_numerico") @db.VarChar(14) // Apenas números
+  tipoDocumento    String   @map("tipo_documento") @db.VarChar(4) // CNPJ ou CPF
+  razaoSocial      String   @map("razao_social") @db.VarChar(255)
+  nomeFantasia     String?  @map("nome_fantasia") @db.VarChar(255)
+  email            String?  @db.VarChar(255)
+  telefone         String?  @db.VarChar(20)
+  cidade           String?  @db.VarChar(100)
+  estado           String?  @db.Char(2) // UF
+  enderecoCompleto String?  @map("endereco_completo") @db.Text
+  status           String   @default("ATIVO") // ATIVO, INATIVO, SUSPENSO, BLOQUEADO
+  dataCadastro     DateTime @default(now()) @map("data_cadastro")
+  dataAtualizacao  DateTime @updatedAt @map("data_atualizacao")
+  createdBy        Int?     @map("created_by")
+  updatedBy        Int?     @map("updated_by")
 
   // Relacionamentos
-  usuarioCriador           Usuario?                   @relation("ClienteCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
-  usuarioAtualizador       Usuario?                   @relation("ClienteAtualizadoPor", fields: [updatedBy], references: [id], onDelete: SetNull)
-  contatos                 ClienteContato[]
-  dadosBancarios           ClienteDadosBancarios[]
+  usuarioCriador     Usuario?                @relation("ClienteCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  usuarioAtualizador Usuario?                @relation("ClienteAtualizadoPor", fields: [updatedBy], references: [id], onDelete: SetNull)
+  contatos           ClienteContato[]
+  dadosBancarios     ClienteDadosBancarios[]
 
   @@index([cnpjCpfNumerico])
   @@index([codigo])
@@ -187,22 +202,22 @@ model Cliente {
 
 // Contatos do Cliente
 model ClienteContato {
-  id                       Int                        @id @default(autoincrement())
-  clienteId                Int                        @map("cliente_id")
-  tipo                     String                     @default("PRINCIPAL") // PRINCIPAL, FINANCEIRO, TECNICO, COMERCIAL
-  nome                     String?                    @db.VarChar(255)
-  ddd                      String?                    @db.VarChar(3)
-  telefone                 String?                    @db.VarChar(20)
-  email                    String?                    @db.VarChar(255)
-  recebeNotificacoes       Boolean                    @default(false) @map("recebe_notificacoes")
-  ativo                    Boolean                    @default(true)
-  dataCadastro             DateTime                   @default(now()) @map("data_cadastro")
-  dataAtualizacao          DateTime                   @updatedAt @map("data_atualizacao")
-  createdBy                Int?                       @map("created_by")
+  id                 Int      @id @default(autoincrement())
+  clienteId          Int      @map("cliente_id")
+  tipo               String   @default("PRINCIPAL") // PRINCIPAL, FINANCEIRO, TECNICO, COMERCIAL
+  nome               String?  @db.VarChar(255)
+  ddd                String?  @db.VarChar(3)
+  telefone           String?  @db.VarChar(20)
+  email              String?  @db.VarChar(255)
+  recebeNotificacoes Boolean  @default(false) @map("recebe_notificacoes")
+  ativo              Boolean  @default(true)
+  dataCadastro       DateTime @default(now()) @map("data_cadastro")
+  dataAtualizacao    DateTime @updatedAt @map("data_atualizacao")
+  createdBy          Int?     @map("created_by")
 
   // Relacionamentos
-  cliente                  Cliente                    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  usuarioCriador           Usuario?                   @relation("ContatoCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  cliente        Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  usuarioCriador Usuario? @relation("ContatoCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@index([clienteId])
   @@index([tipo])
@@ -211,23 +226,23 @@ model ClienteContato {
 
 // Dados Bancários do Cliente
 model ClienteDadosBancarios {
-  id                       Int                        @id @default(autoincrement())
-  clienteId                Int                        @map("cliente_id")
-  banco                    String                     @db.VarChar(100)
-  agencia                  String                     @db.VarChar(20)
-  conta                    String                     @db.VarChar(30)
-  tipoConta                String                     @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA
-  titular                  String?                    @db.VarChar(255)
-  cnpjCpfTitular           String?                    @map("cnpj_cpf_titular") @db.VarChar(18)
-  principal                Boolean                    @default(false)
-  ativo                    Boolean                    @default(true)
-  dataCadastro             DateTime                   @default(now()) @map("data_cadastro")
-  dataAtualizacao          DateTime                   @updatedAt @map("data_atualizacao")
-  createdBy                Int?                       @map("created_by")
+  id              Int      @id @default(autoincrement())
+  clienteId       Int      @map("cliente_id")
+  banco           String   @db.VarChar(100)
+  agencia         String   @db.VarChar(20)
+  conta           String   @db.VarChar(30)
+  tipoConta       String   @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA
+  titular         String?  @db.VarChar(255)
+  cnpjCpfTitular  String?  @map("cnpj_cpf_titular") @db.VarChar(18)
+  principal       Boolean  @default(false)
+  ativo           Boolean  @default(true)
+  dataCadastro    DateTime @default(now()) @map("data_cadastro")
+  dataAtualizacao DateTime @updatedAt @map("data_atualizacao")
+  createdBy       Int?     @map("created_by")
 
   // Relacionamentos
-  cliente                  Cliente                    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  usuarioCriador           Usuario?                   @relation("DadosBancariosCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  cliente        Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  usuarioCriador Usuario? @relation("DadosBancariosCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@index([clienteId])
   @@map("clientes_dados_bancarios")
@@ -239,21 +254,21 @@ model ClienteDadosBancarios {
 
 // Categorias financeiras (Receitas/Despesas)
 model FinanceCategoria {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int?                       @map("usuario_id") // null = categoria global
-  nome                     String                     @db.VarChar(100)
-  tipo                     String                     // RECEITA, DESPESA
-  cor                      String?                    @db.VarChar(20) // hex color
-  icone                    String?                    @db.VarChar(50) // lucide icon name
-  descricao                String?                    @db.Text
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  usuarioId Int?     @map("usuario_id") // null = categoria global
+  nome      String   @db.VarChar(100)
+  tipo      String // RECEITA, DESPESA
+  cor       String?  @db.VarChar(20) // hex color
+  icone     String?  @db.VarChar(50) // lucide icon name
+  descricao String?  @db.Text
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  usuario                  Usuario?                   @relation("FinanceCategoriasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  contasReceber            FinanceContaReceber[]
-  contasPagar              FinanceContaPagar[]
+  usuario       Usuario?              @relation("FinanceCategoriasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  contasReceber FinanceContaReceber[]
+  contasPagar   FinanceContaPagar[]
 
   @@index([usuarioId])
   @@index([tipo])
@@ -262,40 +277,40 @@ model FinanceCategoria {
 
 // Formas de pagamento
 model FinanceFormaPagamento {
-  id                       Int                        @id @default(autoincrement())
-  nome                     String                     @db.VarChar(50) // PIX, Boleto, Transferência, Cartão Crédito, etc.
-  tipo                     String                     // A_VISTA, PARCELADO, RECORRENTE
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(50) // PIX, Boleto, Transferência, Cartão Crédito, etc.
+  tipo      String // A_VISTA, PARCELADO, RECORRENTE
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
 
   // Relacionamentos
-  contasReceber            FinanceContaReceber[]
-  contasPagar              FinanceContaPagar[]
-  faturas                  FinanceFatura[]
+  contasReceber FinanceContaReceber[]
+  contasPagar   FinanceContaPagar[]
+  faturas       FinanceFatura[]
 
   @@map("finance_formas_pagamento")
 }
 
 // Contas bancárias do usuário
 model FinanceContaBancaria {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  banco                    String                     @db.VarChar(100)
-  agencia                  String                     @db.VarChar(20)
-  conta                    String                     @db.VarChar(30)
-  tipoConta                String                     @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA, INVESTIMENTO
-  saldoInicial             Decimal                    @default(0) @map("saldo_inicial") @db.Decimal(15, 2)
-  saldoAtual               Decimal                    @default(0) @map("saldo_atual") @db.Decimal(15, 2)
-  chavePix                 String?                    @map("chave_pix") @db.VarChar(255)
-  principal                Boolean                    @default(false)
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int      @map("usuario_id")
+  banco        String   @db.VarChar(100)
+  agencia      String   @db.VarChar(20)
+  conta        String   @db.VarChar(30)
+  tipoConta    String   @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA, INVESTIMENTO
+  saldoInicial Decimal  @default(0) @map("saldo_inicial") @db.Decimal(15, 2)
+  saldoAtual   Decimal  @default(0) @map("saldo_atual") @db.Decimal(15, 2)
+  chavePix     String?  @map("chave_pix") @db.VarChar(255)
+  principal    Boolean  @default(false)
+  ativo        Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceContasBancariasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  contasReceber            FinanceContaReceber[]
-  contasPagar              FinanceContaPagar[]
+  usuario       Usuario               @relation("FinanceContasBancariasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  contasReceber FinanceContaReceber[]
+  contasPagar   FinanceContaPagar[]
 
   @@index([usuarioId])
   @@map("finance_contas_bancarias")
@@ -303,22 +318,22 @@ model FinanceContaBancaria {
 
 // Clientes do Finance (separado da tabela Cliente do sistema Digital)
 model FinanceCliente {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  nome                     String                     @db.VarChar(255)
-  cpfCnpj                  String?                    @map("cpf_cnpj") @db.VarChar(18)
-  email                    String?                    @db.VarChar(255)
-  telefone                 String?                    @db.VarChar(20)
-  endereco                 String?                    @db.Text
-  observacoes              String?                    @db.Text
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int      @map("usuario_id")
+  nome        String   @db.VarChar(255)
+  cpfCnpj     String?  @map("cpf_cnpj") @db.VarChar(18)
+  email       String?  @db.VarChar(255)
+  telefone    String?  @db.VarChar(20)
+  endereco    String?  @db.Text
+  observacoes String?  @db.Text
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceClientesUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  contasReceber            FinanceContaReceber[]
-  faturas                  FinanceFatura[]
+  usuario       Usuario               @relation("FinanceClientesUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  contasReceber FinanceContaReceber[]
+  faturas       FinanceFatura[]
 
   @@index([usuarioId])
   @@index([cpfCnpj])
@@ -327,21 +342,21 @@ model FinanceCliente {
 
 // Fornecedores
 model FinanceFornecedor {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  nome                     String                     @db.VarChar(255)
-  cpfCnpj                  String?                    @map("cpf_cnpj") @db.VarChar(18)
-  email                    String?                    @db.VarChar(255)
-  telefone                 String?                    @db.VarChar(20)
-  endereco                 String?                    @db.Text
-  observacoes              String?                    @db.Text
-  ativo                    Boolean                    @default(true)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int      @map("usuario_id")
+  nome        String   @db.VarChar(255)
+  cpfCnpj     String?  @map("cpf_cnpj") @db.VarChar(18)
+  email       String?  @db.VarChar(255)
+  telefone    String?  @db.VarChar(20)
+  endereco    String?  @db.Text
+  observacoes String?  @db.Text
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceFornecedoresUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  contasPagar              FinanceContaPagar[]
+  usuario     Usuario             @relation("FinanceFornecedoresUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  contasPagar FinanceContaPagar[]
 
   @@index([usuarioId])
   @@index([cpfCnpj])
@@ -350,43 +365,54 @@ model FinanceFornecedor {
 
 // Contas a Receber
 model FinanceContaReceber {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  clienteId                Int?                       @map("cliente_id")
-  categoriaId              Int?                       @map("categoria_id")
-  contaBancariaId          Int?                       @map("conta_bancaria_id")
-  formaPagamentoId         Int?                       @map("forma_pagamento_id")
-  faturaId                 Int?                       @map("fatura_id") // Se foi gerada por uma fatura
-  descricao                String                     @db.VarChar(255)
-  valorTotal               Decimal                    @map("valor_total") @db.Decimal(15, 2)
-  valorPago                Decimal                    @default(0) @map("valor_pago") @db.Decimal(15, 2)
-  valorPendente            Decimal                    @default(0) @map("valor_pendente") @db.Decimal(15, 2)
-  dataEmissao              DateTime                   @map("data_emissao")
-  dataVencimento           DateTime                   @map("data_vencimento")
-  dataPagamento            DateTime?                  @map("data_pagamento")
-  status                   String                     @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA, PARCIALMENTE_PAGA
-  numeroParcelas           Int                        @default(1) @map("numero_parcelas")
-  observacoes              String?                    @db.Text
-  recorrente               Boolean                    @default(false)
-  frequenciaRecorrencia    String?                    @map("frequencia_recorrencia") // MENSAL, TRIMESTRAL, SEMESTRAL, ANUAL
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
-  createdBy                Int?                       @map("created_by")
-  updatedBy                Int?                       @map("updated_by")
+  id                      Int         @id @default(autoincrement())
+  usuarioId               Int         @map("usuario_id")
+  tipo                    TipoReceita @default(CLIENTE) // Tipo de receita
+  clienteId               Int?        @map("cliente_id") // Obrigatório apenas quando tipo = CLIENTE
+  categoriaId             Int?        @map("categoria_id")
+  contaBancariaId         Int?        @map("conta_bancaria_id")
+  formaPagamentoId        Int?        @map("forma_pagamento_id")
+  faturaId                Int?        @map("fatura_id") // Se foi gerada por uma fatura
+  descricao               String      @db.VarChar(255)
+  valorTotal              Decimal     @map("valor_total") @db.Decimal(15, 2)
+  valorPago               Decimal     @default(0) @map("valor_pago") @db.Decimal(15, 2)
+  valorPendente           Decimal     @default(0) @map("valor_pendente") @db.Decimal(15, 2)
+  dataEmissao             DateTime    @map("data_emissao")
+  dataVencimento          DateTime    @map("data_vencimento")
+  dataPagamento           DateTime?   @map("data_pagamento")
+  status                  String      @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA, PARCIALMENTE_PAGA
+  numeroParcelas          Int         @default(1) @map("numero_parcelas")
+  observacoes             String?     @db.Text
+  recorrente              Boolean     @default(false)
+  frequenciaRecorrencia   String?     @map("frequencia_recorrencia") // MENSAL, TRIMESTRAL, SEMESTRAL, ANUAL
+  diaVencimentoRecorrente Int?        @map("dia_vencimento_recorrente") // Dia do mês (1-31) para receitas recorrentes
+  numeroDocumento         String?     @map("numero_documento") @db.VarChar(50) // NF, Boleto, Recibo
+  integracaoId            String?     @map("integracao_id") @db.VarChar(100) // ID externo (Asaas, Stripe, etc)
+  integracaoTipo          String?     @map("integracao_tipo") @db.VarChar(50) // asaas, stripe, pagarme
+  metadados               Json? // Dados adicionais da integração
+  createdAt               DateTime    @default(now()) @map("created_at")
+  updatedAt               DateTime    @updatedAt @map("updated_at")
+  createdBy               Int?        @map("created_by")
+  updatedBy               Int?        @map("updated_by")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceContasReceberUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  cliente                  FinanceCliente?            @relation(fields: [clienteId], references: [id], onDelete: SetNull)
-  categoria                FinanceCategoria?          @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
-  contaBancaria            FinanceContaBancaria?      @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
-  formaPagamento           FinanceFormaPagamento?     @relation(fields: [formaPagamentoId], references: [id], onDelete: SetNull)
-  fatura                   FinanceFatura?             @relation(fields: [faturaId], references: [id], onDelete: SetNull)
-  usuarioCriador           Usuario?                   @relation("ContaReceberCriadaPor", fields: [createdBy], references: [id], onDelete: SetNull)
-  usuarioAtualizador       Usuario?                   @relation("ContaReceberAtualizadaPor", fields: [updatedBy], references: [id], onDelete: SetNull)
-  parcelas                 FinanceParcela[]
-  anexos                   FinanceAnexo[]
+  usuario            Usuario                @relation("FinanceContasReceberUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  cliente            FinanceCliente?        @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  categoria          FinanceCategoria?      @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  contaBancaria      FinanceContaBancaria?  @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
+  formaPagamento     FinanceFormaPagamento? @relation(fields: [formaPagamentoId], references: [id], onDelete: SetNull)
+  fatura             FinanceFatura?         @relation(fields: [faturaId], references: [id], onDelete: SetNull)
+  usuarioCriador     Usuario?               @relation("ContaReceberCriadaPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  usuarioAtualizador Usuario?               @relation("ContaReceberAtualizadaPor", fields: [updatedBy], references: [id], onDelete: SetNull)
+  parcelas           FinanceParcela[]
+  anexos             FinanceAnexo[]
 
   @@index([usuarioId])
+  @@index([usuarioId, tipo])
+  @@index([usuarioId, status])
+  @@index([usuarioId, dataVencimento])
+  @@index([usuarioId, createdAt])
+  @@index([usuarioId, status, dataVencimento])
   @@index([clienteId])
   @@index([status])
   @@index([dataVencimento])
@@ -395,41 +421,48 @@ model FinanceContaReceber {
 
 // Contas a Pagar
 model FinanceContaPagar {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  fornecedorId             Int?                       @map("fornecedor_id")
-  categoriaId              Int?                       @map("categoria_id")
-  contaBancariaId          Int?                       @map("conta_bancaria_id")
-  formaPagamentoId         Int?                       @map("forma_pagamento_id")
-  descricao                String                     @db.VarChar(255)
-  valorTotal               Decimal                    @map("valor_total") @db.Decimal(15, 2)
-  valorPago                Decimal                    @default(0) @map("valor_pago") @db.Decimal(15, 2)
-  valorPendente            Decimal                    @default(0) @map("valor_pendente") @db.Decimal(15, 2)
-  dataEmissao              DateTime                   @map("data_emissao")
-  dataVencimento           DateTime                   @map("data_vencimento")
-  dataPagamento            DateTime?                  @map("data_pagamento")
-  status                   String                     @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA, PARCIALMENTE_PAGA
-  numeroParcelas           Int                        @default(1) @map("numero_parcelas")
-  observacoes              String?                    @db.Text
-  recorrente               Boolean                    @default(false)
-  frequenciaRecorrencia    String?                    @map("frequencia_recorrencia") // MENSAL, TRIMESTRAL, SEMESTRAL, ANUAL
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
-  createdBy                Int?                       @map("created_by")
-  updatedBy                Int?                       @map("updated_by")
+  id                    Int       @id @default(autoincrement())
+  usuarioId             Int       @map("usuario_id")
+  fornecedorId          Int?      @map("fornecedor_id")
+  categoriaId           Int?      @map("categoria_id")
+  contaBancariaId       Int?      @map("conta_bancaria_id")
+  formaPagamentoId      Int?      @map("forma_pagamento_id")
+  descricao             String    @db.VarChar(255)
+  valorTotal            Decimal   @map("valor_total") @db.Decimal(15, 2)
+  valorPago             Decimal   @default(0) @map("valor_pago") @db.Decimal(15, 2)
+  valorPendente         Decimal   @default(0) @map("valor_pendente") @db.Decimal(15, 2)
+  dataEmissao           DateTime  @map("data_emissao")
+  dataVencimento        DateTime  @map("data_vencimento")
+  dataPagamento         DateTime? @map("data_pagamento")
+  status                String    @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA, PARCIALMENTE_PAGA
+  numeroParcelas        Int       @default(1) @map("numero_parcelas")
+  observacoes           String?   @db.Text
+  recorrente            Boolean   @default(false)
+  frequenciaRecorrencia String?   @map("frequencia_recorrencia") // MENSAL, TRIMESTRAL, SEMESTRAL, ANUAL
+  numeroDocumento       String?   @map("numero_documento") @db.VarChar(50) // NF, Boleto, Recibo
+  integracaoId          String?   @map("integracao_id") @db.VarChar(100) // ID externo (Asaas, Stripe, etc)
+  integracaoTipo        String?   @map("integracao_tipo") @db.VarChar(50) // asaas, stripe, pagarme
+  metadados             Json? // Dados adicionais da integração
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  createdBy             Int?      @map("created_by")
+  updatedBy             Int?      @map("updated_by")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceContasPagarUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  fornecedor               FinanceFornecedor?         @relation(fields: [fornecedorId], references: [id], onDelete: SetNull)
-  categoria                FinanceCategoria?          @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
-  contaBancaria            FinanceContaBancaria?      @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
-  formaPagamento           FinanceFormaPagamento?     @relation(fields: [formaPagamentoId], references: [id], onDelete: SetNull)
-  usuarioCriador           Usuario?                   @relation("ContaPagarCriadaPor", fields: [createdBy], references: [id], onDelete: SetNull)
-  usuarioAtualizador       Usuario?                   @relation("ContaPagarAtualizadaPor", fields: [updatedBy], references: [id], onDelete: SetNull)
-  parcelas                 FinanceParcela[]
-  anexos                   FinanceAnexo[]
+  usuario            Usuario                @relation("FinanceContasPagarUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  fornecedor         FinanceFornecedor?     @relation(fields: [fornecedorId], references: [id], onDelete: SetNull)
+  categoria          FinanceCategoria?      @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  contaBancaria      FinanceContaBancaria?  @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
+  formaPagamento     FinanceFormaPagamento? @relation(fields: [formaPagamentoId], references: [id], onDelete: SetNull)
+  usuarioCriador     Usuario?               @relation("ContaPagarCriadaPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  usuarioAtualizador Usuario?               @relation("ContaPagarAtualizadaPor", fields: [updatedBy], references: [id], onDelete: SetNull)
+  parcelas           FinanceParcela[]
+  anexos             FinanceAnexo[]
 
   @@index([usuarioId])
+  @@index([usuarioId, dataVencimento])
+  @@index([usuarioId, createdAt])
+  @@index([usuarioId, status, dataVencimento])
   @@index([fornecedorId])
   @@index([status])
   @@index([dataVencimento])
@@ -438,51 +471,54 @@ model FinanceContaPagar {
 
 // Faturas
 model FinanceFatura {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  clienteId                Int?                       @map("cliente_id")
-  formaPagamentoId         Int?                       @map("forma_pagamento_id")
-  numeroFatura             String                     @unique @map("numero_fatura") // Auto-incrementado: 2026-0001
-  valorTotal               Decimal                    @map("valor_total") @db.Decimal(15, 2)
-  desconto                 Decimal                    @default(0) @db.Decimal(15, 2)
-  acrescimo                Decimal                    @default(0) @db.Decimal(15, 2)
-  valorFinal               Decimal                    @map("valor_final") @db.Decimal(15, 2)
-  dataEmissao              DateTime                   @map("data_emissao")
-  dataVencimento           DateTime                   @map("data_vencimento")
-  status                   String                     @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA
-  observacoes              String?                    @db.Text
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
-  createdBy                Int?                       @map("created_by")
+  id               Int       @id @default(autoincrement())
+  usuarioId        Int       @map("usuario_id")
+  clienteId        Int?      @map("cliente_id")
+  formaPagamentoId Int?      @map("forma_pagamento_id")
+  numeroFatura     String    @unique @map("numero_fatura") // Auto-incrementado: 2026-0001
+  valorTotal       Decimal   @map("valor_total") @db.Decimal(15, 2)
+  desconto         Decimal   @default(0) @db.Decimal(15, 2)
+  acrescimo        Decimal   @default(0) @db.Decimal(15, 2)
+  valorFinal       Decimal   @map("valor_final") @db.Decimal(15, 2)
+  dataEmissao      DateTime  @map("data_emissao")
+  dataVencimento   DateTime  @map("data_vencimento")
+  dataPagamento    DateTime? @map("data_pagamento") // Quando a fatura foi efetivamente paga
+  status           String    @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA
+  observacoes      String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  createdBy        Int?      @map("created_by")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceFaturasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
-  cliente                  FinanceCliente?            @relation(fields: [clienteId], references: [id], onDelete: SetNull)
-  formaPagamento           FinanceFormaPagamento?     @relation(fields: [formaPagamentoId], references: [id], onDelete: SetNull)
-  usuarioCriador           Usuario?                   @relation("FaturaCriadaPor", fields: [createdBy], references: [id], onDelete: SetNull)
-  contasReceber            FinanceContaReceber[]      // Fatura gera uma conta a receber
-  itens                    FinanceItemFatura[]
-  anexos                   FinanceAnexo[]
+  usuario        Usuario                @relation("FinanceFaturasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  cliente        FinanceCliente?        @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  formaPagamento FinanceFormaPagamento? @relation(fields: [formaPagamentoId], references: [id], onDelete: SetNull)
+  usuarioCriador Usuario?               @relation("FaturaCriadaPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  contasReceber  FinanceContaReceber[] // Fatura gera uma conta a receber
+  itens          FinanceItemFatura[]
+  anexos         FinanceAnexo[]
 
   @@index([usuarioId])
+  @@index([usuarioId, dataEmissao])
   @@index([clienteId])
   @@index([numeroFatura])
   @@index([status])
+  @@index([dataVencimento])
   @@map("finance_faturas")
 }
 
 // Itens da Fatura
 model FinanceItemFatura {
-  id                       Int                        @id @default(autoincrement())
-  faturaId                 Int                        @map("fatura_id")
-  descricao                String                     @db.VarChar(255)
-  quantidade               Int
-  valorUnitario            Decimal                    @map("valor_unitario") @db.Decimal(15, 2)
-  valorTotal               Decimal                    @map("valor_total") @db.Decimal(15, 2)
-  createdAt                DateTime                   @default(now()) @map("created_at")
+  id            Int      @id @default(autoincrement())
+  faturaId      Int      @map("fatura_id")
+  descricao     String   @db.VarChar(255)
+  quantidade    Int
+  valorUnitario Decimal  @map("valor_unitario") @db.Decimal(15, 2)
+  valorTotal    Decimal  @map("valor_total") @db.Decimal(15, 2)
+  createdAt     DateTime @default(now()) @map("created_at")
 
   // Relacionamentos
-  fatura                   FinanceFatura              @relation(fields: [faturaId], references: [id], onDelete: Cascade)
+  fatura FinanceFatura @relation(fields: [faturaId], references: [id], onDelete: Cascade)
 
   @@index([faturaId])
   @@map("finance_itens_fatura")
@@ -490,20 +526,23 @@ model FinanceItemFatura {
 
 // Parcelas (para contas parceladas)
 model FinanceParcela {
-  id                       Int                        @id @default(autoincrement())
-  contaReceberId           Int?                       @map("conta_receber_id")
-  contaPagarId             Int?                       @map("conta_pagar_id")
-  numeroParcela            Int                        @map("numero_parcela")
-  valorParcela             Decimal                    @map("valor_parcela") @db.Decimal(15, 2)
-  dataVencimento           DateTime                   @map("data_vencimento")
-  dataPagamento            DateTime?                  @map("data_pagamento")
-  status                   String                     @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement())
+  contaReceberId Int?      @map("conta_receber_id")
+  contaPagarId   Int?      @map("conta_pagar_id")
+  numeroParcela  Int       @map("numero_parcela")
+  valorParcela   Decimal   @map("valor_parcela") @db.Decimal(15, 2)
+  dataVencimento DateTime  @map("data_vencimento")
+  dataPagamento  DateTime? @map("data_pagamento")
+  status         String    @default("PENDENTE") // PENDENTE, PAGA, VENCIDA, CANCELADA
+  juros          Decimal?  @default(0) @db.Decimal(15, 2) // Juros por atraso
+  multa          Decimal?  @default(0) @db.Decimal(15, 2) // Multa por atraso
+  desconto       Decimal?  @default(0) @db.Decimal(15, 2) // Desconto aplicado
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relacionamentos
-  contaReceber             FinanceContaReceber?       @relation(fields: [contaReceberId], references: [id], onDelete: Cascade)
-  contaPagar               FinanceContaPagar?         @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
+  contaReceber FinanceContaReceber? @relation(fields: [contaReceberId], references: [id], onDelete: Cascade)
+  contaPagar   FinanceContaPagar?   @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
 
   @@index([contaReceberId])
   @@index([contaPagarId])
@@ -513,23 +552,23 @@ model FinanceParcela {
 
 // Anexos/Documentos
 model FinanceAnexo {
-  id                       Int                        @id @default(autoincrement())
-  contaReceberId           Int?                       @map("conta_receber_id")
-  contaPagarId             Int?                       @map("conta_pagar_id")
-  faturaId                 Int?                       @map("fatura_id")
-  nomeArquivo              String                     @map("nome_arquivo") @db.VarChar(255)
-  caminhoArquivo           String                     @map("caminho_arquivo") @db.Text
-  tamanhoArquivo           Int                        @map("tamanho_arquivo") // bytes
-  tipoArquivo              String                     @map("tipo_arquivo") @db.VarChar(50) // pdf, jpg, png, etc.
-  descricao                String?                    @db.Text
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  createdBy                Int?                       @map("created_by")
+  id             Int      @id @default(autoincrement())
+  contaReceberId Int?     @map("conta_receber_id")
+  contaPagarId   Int?     @map("conta_pagar_id")
+  faturaId       Int?     @map("fatura_id")
+  nomeArquivo    String   @map("nome_arquivo") @db.VarChar(255)
+  caminhoArquivo String   @map("caminho_arquivo") @db.Text
+  tamanhoArquivo Int      @map("tamanho_arquivo") // bytes
+  tipoArquivo    String   @map("tipo_arquivo") @db.VarChar(50) // pdf, jpg, png, etc.
+  descricao      String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  createdBy      Int?     @map("created_by")
 
   // Relacionamentos
-  contaReceber             FinanceContaReceber?       @relation(fields: [contaReceberId], references: [id], onDelete: Cascade)
-  contaPagar               FinanceContaPagar?         @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
-  fatura                   FinanceFatura?             @relation(fields: [faturaId], references: [id], onDelete: Cascade)
-  usuarioCriador           Usuario?                   @relation("AnexoCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
+  contaReceber   FinanceContaReceber? @relation(fields: [contaReceberId], references: [id], onDelete: Cascade)
+  contaPagar     FinanceContaPagar?   @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
+  fatura         FinanceFatura?       @relation(fields: [faturaId], references: [id], onDelete: Cascade)
+  usuarioCriador Usuario?             @relation("AnexoCriadoPor", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@index([contaReceberId])
   @@index([contaPagarId])
@@ -539,44 +578,44 @@ model FinanceAnexo {
 
 // Configurações de Alertas
 model FinanceConfiguracaoAlerta {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @unique @map("usuario_id")
-  contasVencerAtivo        Boolean                    @default(true) @map("contas_vencer_ativo")
-  contasVencerDias         Int                        @default(3) @map("contas_vencer_dias")
-  contasVencidasAtivo      Boolean                    @default(true) @map("contas_vencidas_ativo")
-  limiteContaBancariaAtivo Boolean                    @default(false) @map("limite_conta_bancaria_ativo")
-  limiteContaBancariaValor Decimal?                   @map("limite_conta_bancaria_valor") @db.Decimal(15, 2)
-  emailNotificacao         Boolean                    @default(true) @map("email_notificacao")
-  notificacaoSistema       Boolean                    @default(true) @map("notificacao_sistema")
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  id                       Int      @id @default(autoincrement())
+  usuarioId                Int      @unique @map("usuario_id")
+  contasVencerAtivo        Boolean  @default(true) @map("contas_vencer_ativo")
+  contasVencerDias         Int      @default(3) @map("contas_vencer_dias")
+  contasVencidasAtivo      Boolean  @default(true) @map("contas_vencidas_ativo")
+  limiteContaBancariaAtivo Boolean  @default(false) @map("limite_conta_bancaria_ativo")
+  limiteContaBancariaValor Decimal? @map("limite_conta_bancaria_valor") @db.Decimal(15, 2)
+  emailNotificacao         Boolean  @default(true) @map("email_notificacao")
+  notificacaoSistema       Boolean  @default(true) @map("notificacao_sistema")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceConfiguracaoAlertaUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation("FinanceConfiguracaoAlertaUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("finance_configuracoes_alertas")
 }
 
 // Alertas
 model FinanceAlerta {
-  id                       Int                        @id @default(autoincrement())
-  usuarioId                Int                        @map("usuario_id")
-  tipo                     String                     // CONTAS_VENCER, CONTAS_VENCIDAS, PAGAMENTO_RECEBIDO, META_ATINGIDA, LIMITE_CONTA
-  titulo                   String                     @db.VarChar(255)
-  mensagem                 String                     @db.Text
-  severidade               String                     @default("INFO") // CRITICO, AVISO, INFO
-  lido                     Boolean                    @default(false)
-  contaReceberId           Int?                       @map("conta_receber_id")
-  contaPagarId             Int?                       @map("conta_pagar_id")
-  dataLeitura              DateTime?                  @map("data_leitura")
-  createdAt                DateTime                   @default(now()) @map("created_at")
+  id             Int       @id @default(autoincrement())
+  usuarioId      Int       @map("usuario_id")
+  tipo           String // CONTAS_VENCER, CONTAS_VENCIDAS, PAGAMENTO_RECEBIDO, META_ATINGIDA, LIMITE_CONTA
+  titulo         String    @db.VarChar(255)
+  mensagem       String    @db.Text
+  severidade     String    @default("INFO") // CRITICO, AVISO, INFO
+  lido           Boolean   @default(false)
+  contaReceberId Int?      @map("conta_receber_id")
+  contaPagarId   Int?      @map("conta_pagar_id")
+  dataLeitura    DateTime? @map("data_leitura")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   // Relacionamentos
-  usuario                  Usuario                    @relation("FinanceAlertasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation("FinanceAlertasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([usuarioId])
+  @@index([usuarioId, lido, createdAt])
   @@index([lido])
   @@index([tipo])
   @@map("finance_alertas")
 }
-
