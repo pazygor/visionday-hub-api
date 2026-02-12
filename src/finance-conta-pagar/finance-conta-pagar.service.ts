@@ -13,6 +13,57 @@ export class FinanceContaPagarService {
     const { numeroParcelas = 1, ...rest } = createDto;
     const valorTotal = new Decimal(createDto.valorTotal);
 
+    // Validar fornecedor se fornecido
+    if (createDto.fornecedorId) {
+      const fornecedor = await this.prisma.financeFornecedor.findFirst({
+        where: { id: createDto.fornecedorId, usuarioId },
+      });
+
+      if (!fornecedor) {
+        throw new NotFoundException('Fornecedor não encontrado');
+      }
+    }
+
+    // Validar categoria se fornecida
+    if (createDto.categoriaId) {
+      const categoria = await this.prisma.financeCategoria.findFirst({
+        where: { 
+          id: createDto.categoriaId, 
+          tipo: 'DESPESA',
+          OR: [
+            { usuarioId },
+            { usuarioId: null },
+          ],
+        },
+      });
+
+      if (!categoria) {
+        throw new NotFoundException('Categoria não encontrada');
+      }
+    }
+
+    // Validar conta bancária se fornecida
+    if (createDto.contaBancariaId) {
+      const contaBancaria = await this.prisma.financeContaBancaria.findFirst({
+        where: { id: createDto.contaBancariaId, usuarioId },
+      });
+
+      if (!contaBancaria) {
+        throw new NotFoundException('Conta bancária não encontrada');
+      }
+    }
+
+    // Validar forma de pagamento se fornecida
+    if (createDto.formaPagamentoId) {
+      const formaPagamento = await this.prisma.financeFormaPagamento.findFirst({
+        where: { id: createDto.formaPagamentoId, ativo: true },
+      });
+
+      if (!formaPagamento) {
+        throw new NotFoundException('Forma de pagamento não encontrada');
+      }
+    }
+
     const conta = await this.prisma.financeContaPagar.create({
       data: {
         ...rest,
@@ -103,14 +154,31 @@ export class FinanceContaPagarService {
   }
 
   async update(id: number, usuarioId: number, updateDto: UpdateFinanceContaPagarDto, updatedBy: number) {
-    await this.findOne(id, usuarioId);
+    const conta = await this.findOne(id, usuarioId);
+
+    // Se o valorTotal foi atualizado, recalcular valorPendente e status
+    let dadosAtualizados: any = { ...updateDto, updatedBy };
+
+    if (updateDto.valorTotal !== undefined) {
+      const novoValorTotal = new Decimal(updateDto.valorTotal);
+      const valorPago = new Decimal(conta.valorPago);
+      const valorPendente = novoValorTotal.minus(valorPago);
+
+      dadosAtualizados.valorPendente = valorPendente;
+
+      // Recalcular status baseado nos novos valores
+      if (valorPendente.isZero() || valorPendente.lessThanOrEqualTo(0)) {
+        dadosAtualizados.status = 'PAGA';
+      } else if (valorPago.greaterThan(0)) {
+        dadosAtualizados.status = 'PARCIALMENTE_PAGA';
+      } else {
+        dadosAtualizados.status = 'PENDENTE';
+      }
+    }
 
     return this.prisma.financeContaPagar.update({
       where: { id },
-      data: {
-        ...updateDto,
-        updatedBy,
-      },
+      data: dadosAtualizados,
     });
   }
 
@@ -140,6 +208,37 @@ export class FinanceContaPagarService {
       status = 'PARCIALMENTE_PAGA';
     }
 
+    // Atualizar saldo da conta bancária se fornecida (diminuir porque é uma saída)
+    if (dto.contaBancariaId) {
+      const contaBancaria = await this.prisma.financeContaBancaria.findFirst({
+        where: { id: dto.contaBancariaId, usuarioId },
+      });
+
+      if (!contaBancaria) {
+        throw new NotFoundException('Conta bancária não encontrada');
+      }
+
+      await this.prisma.financeContaBancaria.update({
+        where: { id: dto.contaBancariaId },
+        data: {
+          saldoAtual: {
+            decrement: new Decimal(dto.valor),
+          },
+        },
+      });
+    }
+
+    // Validar forma de pagamento se fornecida
+    if (dto.formaPagamentoId) {
+      const formaPagamento = await this.prisma.financeFormaPagamento.findFirst({
+        where: { id: dto.formaPagamentoId, ativo: true },
+      });
+
+      if (!formaPagamento) {
+        throw new NotFoundException('Forma de pagamento não encontrada');
+      }
+    }
+
     return this.prisma.financeContaPagar.update({
       where: { id },
       data: {
@@ -147,6 +246,9 @@ export class FinanceContaPagarService {
         valorPendente,
         status,
         dataPagamento: status === 'PAGA' ? new Date(dto.dataPagamento) : null,
+        contaBancariaId: dto.contaBancariaId || conta.contaBancariaId,
+        formaPagamentoId: dto.formaPagamentoId || conta.formaPagamentoId,
+        observacoes: dto.observacoes || conta.observacoes,
       },
     });
   }
