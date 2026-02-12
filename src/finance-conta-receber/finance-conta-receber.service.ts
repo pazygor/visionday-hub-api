@@ -5,7 +5,6 @@ import { UpdateFinanceContaReceberDto } from './dto/update-finance-conta-receber
 import { RegistrarPagamentoDto } from './dto/registrar-pagamento.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { TipoReceita } from '../modules/finance/enums/tipo-receita.enum';
-import { Prisma } from '@prisma/client';
 
 export interface FiltrosContaReceber {
   tipo?: TipoReceita | TipoReceita[];
@@ -55,6 +54,26 @@ export class FinanceContaReceberService {
       }
     }
 
+    if (createDto.contaBancariaId) {
+      const contaBancaria = await this.prisma.financeContaBancaria.findFirst({
+        where: { id: createDto.contaBancariaId, usuarioId },
+      });
+
+      if (!contaBancaria) {
+        throw new NotFoundException('Conta bancária não encontrada');
+      }
+    }
+
+    if (createDto.formaPagamentoId) {
+      const formaPagamento = await this.prisma.financeFormaPagamento.findFirst({
+        where: { id: createDto.formaPagamentoId, ativo: true },
+      });
+
+      if (!formaPagamento) {
+        throw new NotFoundException('Forma de pagamento não encontrada');
+      }
+    }
+
     // Determinar status inicial baseado na data de vencimento
     const hoje = new Date();
     const dataVencimento = new Date(createDto.dataVencimento);
@@ -77,6 +96,7 @@ export class FinanceContaReceberService {
         recorrente: createDto.recorrente || false,
         frequenciaRecorrencia: createDto.frequenciaRecorrencia,
         diaVencimentoRecorrente: createDto.diaVencimentoRecorrente,
+        numeroDocumento: createDto.numeroDocumento,
         usuarioId,
         valorTotal,
         valorPago: 0,
@@ -219,7 +239,7 @@ export class FinanceContaReceberService {
   }
 
   async update(id: number, usuarioId: number, updateDto: UpdateFinanceContaReceberDto, updatedBy: number) {
-    await this.findOne(id, usuarioId);
+    const contaAtual = await this.findOne(id, usuarioId);
 
     // Validações similares ao create
     if (updateDto.tipo === TipoReceita.CLIENTE && updateDto.clienteId) {
@@ -249,6 +269,26 @@ export class FinanceContaReceberService {
       }
     }
 
+    if (updateDto.contaBancariaId) {
+      const contaBancaria = await this.prisma.financeContaBancaria.findFirst({
+        where: { id: updateDto.contaBancariaId, usuarioId },
+      });
+
+      if (!contaBancaria) {
+        throw new NotFoundException('Conta bancária não encontrada');
+      }
+    }
+
+    if (updateDto.formaPagamentoId) {
+      const formaPagamento = await this.prisma.financeFormaPagamento.findFirst({
+        where: { id: updateDto.formaPagamentoId, ativo: true },
+      });
+
+      if (!formaPagamento) {
+        throw new NotFoundException('Forma de pagamento não encontrada');
+      }
+    }
+
     // Preparar dados para atualização
     const updateData: any = {
       ...updateDto,
@@ -262,6 +302,38 @@ export class FinanceContaReceberService {
 
     if (updateDto.dataVencimento) {
       updateData.dataVencimento = new Date(updateDto.dataVencimento);
+    }
+
+    const valorTotalAtualizado = updateDto.valorTotal !== undefined
+      ? new Decimal(updateDto.valorTotal)
+      : new Decimal(contaAtual.valorTotal);
+
+    const valorPagoAtualizado = updateDto.valorPago !== undefined
+      ? new Decimal(updateDto.valorPago)
+      : new Decimal(contaAtual.valorPago);
+
+    if (valorPagoAtualizado.greaterThan(valorTotalAtualizado)) {
+      throw new BadRequestException('Valor pago não pode ser maior que o valor total');
+    }
+
+    updateData.valorPendente = valorTotalAtualizado.minus(valorPagoAtualizado);
+
+    if (!updateDto.status) {
+      if (valorPagoAtualizado.isZero()) {
+        const referenciaVencimento = updateData.dataVencimento
+          ? new Date(updateData.dataVencimento)
+          : new Date(contaAtual.dataVencimento);
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        referenciaVencimento.setHours(0, 0, 0, 0);
+
+        updateData.status = referenciaVencimento < hoje ? 'VENCIDA' : 'PENDENTE';
+      } else if (valorPagoAtualizado.greaterThanOrEqualTo(valorTotalAtualizado)) {
+        updateData.status = 'PAGA';
+      } else {
+        updateData.status = 'PARCIALMENTE_PAGA';
+      }
     }
 
     return this.prisma.financeContaReceber.update({
@@ -331,6 +403,16 @@ export class FinanceContaReceberService {
       });
     }
 
+    if (dto.formaPagamentoId) {
+      const formaPagamento = await this.prisma.financeFormaPagamento.findFirst({
+        where: { id: dto.formaPagamentoId, ativo: true },
+      });
+
+      if (!formaPagamento) {
+        throw new NotFoundException('Forma de pagamento não encontrada');
+      }
+    }
+
     return this.prisma.financeContaReceber.update({
       where: { id },
       data: {
@@ -339,7 +421,7 @@ export class FinanceContaReceberService {
         status,
         dataPagamento: status === 'PAGA' ? new Date(dto.dataPagamento) : null,
         contaBancariaId: dto.contaBancariaId || conta.contaBancariaId,
-        formaPagamentoId: dto.formaPagamento ? parseInt(dto.formaPagamento) : conta.formaPagamentoId,
+        formaPagamentoId: dto.formaPagamentoId || conta.formaPagamentoId,
         observacoes: dto.observacoes || conta.observacoes,
       },
       include: {

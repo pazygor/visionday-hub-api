@@ -1,12 +1,12 @@
 export enum TipoReceita {
-  CLIENTE = 'cliente',
-  SALARIO = 'salario',
-  FREELANCE = 'freelance',
-  ALUGUEL = 'aluguel',
-  VENDA = 'venda',
-  INVESTIMENTO = 'investimento',
-  BONIFICACAO = 'bonificacao',
-  OUTRO = 'outro',
+  CLIENTE = 'CLIENTE',
+  SALARIO = 'SALARIO',
+  FREELANCE = 'FREELANCE',
+  ALUGUEL = 'ALUGUEL',
+  VENDA = 'VENDA',
+  INVESTIMENTO = 'INVESTIMENTO',
+  BONIFICACAO = 'BONIFICACAO',
+  OUTRO = 'OUTRO',
 }
 
 export const TipoReceitaLabels: Record<TipoReceita, string> = {

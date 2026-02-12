@@ -66,6 +66,11 @@ export class CreateFinanceContaReceberDto {
   numeroParcelas?: number;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  numeroDocumento?: string;
+
+  @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
   recorrente?: boolean;

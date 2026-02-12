@@ -13,11 +13,12 @@ export class RegistrarPagamentoDto {
   @IsOptional()
   @IsInt()
   @Type(() => Number)
-  contaBancariaId?: number;
+  formaPagamentoId?: number;
 
   @IsOptional()
-  @IsString()
-  formaPagamento?: string;
+  @IsInt()
+  @Type(() => Number)
+  contaBancariaId?: number;
 
   @IsOptional()
   @IsString()
