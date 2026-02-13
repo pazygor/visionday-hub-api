@@ -300,7 +300,13 @@ export class FinanceContaPagarService {
     contas.forEach(conta => {
       resumo.totalPagar = resumo.totalPagar.plus(conta.valorTotal);
       resumo.totalPago = resumo.totalPago.plus(conta.valorPago);
-      resumo.totalPendente = resumo.totalPendente.plus(conta.valorPendente);
+      
+      // Total pendente: apenas contas PENDENTE ou PARCIALMENTE_PAGA (não vencidas)
+      if (conta.status === 'PENDENTE' || conta.status === 'PARCIALMENTE_PAGA') {
+        resumo.totalPendente = resumo.totalPendente.plus(conta.valorPendente);
+      }
+      
+      // Total vencidas: apenas contas com status VENCIDA
       if (conta.status === 'VENCIDA') {
         resumo.totalVencidas = resumo.totalVencidas.plus(conta.valorPendente);
       }

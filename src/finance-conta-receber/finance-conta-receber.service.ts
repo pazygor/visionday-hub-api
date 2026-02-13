@@ -444,11 +444,11 @@ export class FinanceContaReceberService {
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
 
-    // Total pendente
+    // Total pendente (apenas contas dentro do prazo)
     const totalPendenteResult = await this.prisma.financeContaReceber.aggregate({
       where: {
         usuarioId,
-        status: { in: ['PENDENTE', 'PARCIALMENTE_PAGA', 'VENCIDA'] },
+        status: { in: ['PENDENTE', 'PARCIALMENTE_PAGA'] },
       },
       _sum: { valorPendente: true },
       _count: true,
