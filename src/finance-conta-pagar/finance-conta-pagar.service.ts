@@ -104,12 +104,35 @@ export class FinanceContaPagarService {
     await this.prisma.financeParcela.createMany({ data: parcelas });
   }
 
+  /**
+   * Atualiza automaticamente o status de contas para VENCIDA
+   * quando a data de vencimento passou e ainda não estão pagas
+   */
+  private async atualizarStatusVencidas(usuarioId: number) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    await this.prisma.financeContaPagar.updateMany({
+      where: {
+        usuarioId,
+        dataVencimento: { lt: hoje },
+        status: { in: ['PENDENTE', 'PARCIALMENTE_PAGA'] },
+      },
+      data: {
+        status: 'VENCIDA',
+      },
+    });
+  }
+
   async findAll(usuarioId: number, filtros?: {
     status?: string;
     fornecedorId?: number;
     dataInicio?: string;
     dataFim?: string;
   }) {
+    // Atualizar status de contas vencidas antes de buscar
+    await this.atualizarStatusVencidas(usuarioId);
+
     return this.prisma.financeContaPagar.findMany({
       where: {
         usuarioId,
@@ -254,6 +277,9 @@ export class FinanceContaPagarService {
   }
 
   async getResumo(usuarioId: number) {
+    // Atualizar status de contas vencidas antes de calcular o resumo
+    await this.atualizarStatusVencidas(usuarioId);
+
     const contas = await this.prisma.financeContaPagar.findMany({
       where: { usuarioId },
       select: {

@@ -15,14 +15,18 @@ export class FinanceContaPagarController {
     return this.service.create(req.user.id, createDto, req.user.id);
   }
 
-  @Get()
-  findAll(@Request() req, @Query() filtros: any) {
-    return this.service.findAll(req.user.id, filtros);
-  }
-
+  /**
+   * GET /finance/contas-pagar/resumo
+   * IMPORTANTE: Deve vir ANTES de GET / para evitar conflito
+   */
   @Get('resumo')
   getResumo(@Request() req) {
     return this.service.getResumo(req.user.id);
+  }
+
+  @Get()
+  findAll(@Request() req, @Query() filtros: any) {
+    return this.service.findAll(req.user.id, filtros);
   }
 
   @Get(':id')

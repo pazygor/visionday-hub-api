@@ -144,6 +144,9 @@ export class FinanceContaReceberService {
   }
 
   async findAll(usuarioId: number, filtros?: FiltrosContaReceber) {
+    // Atualizar status de contas vencidas antes de buscar
+    await this.atualizarStatusVencidas(usuarioId);
+
     const where: any = {
       usuarioId,
     };
@@ -434,6 +437,9 @@ export class FinanceContaReceberService {
   }
 
   async getResumo(usuarioId: number) {
+    // Atualizar status de contas vencidas antes de calcular resumo
+    await this.atualizarStatusVencidas(usuarioId);
+
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
@@ -515,6 +521,26 @@ export class FinanceContaReceberService {
       contasPagas: totalPagoResult._count,
       proximosRecebimentos,
     };
+  }
+
+  /**
+   * Atualiza status de contas vencidas para um usuário específico
+   * (chamada antes de findAll e getResumo para garantir dados atualizados)
+   */
+  private async atualizarStatusVencidas(usuarioId: number) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    await this.prisma.financeContaReceber.updateMany({
+      where: {
+        usuarioId,
+        dataVencimento: { lt: hoje },
+        status: { in: ['PENDENTE', 'PARCIALMENTE_PAGA'] },
+      },
+      data: {
+        status: 'VENCIDA',
+      },
+    });
   }
 
   /**
