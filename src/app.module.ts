@@ -15,6 +15,8 @@ import { FinanceFaturaModule } from './finance-fatura/finance-fatura.module';
 import { FinanceAlertaModule } from './finance-alerta/finance-alerta.module';
 import { AcademyCursoModule } from './academy-curso/academy-curso.module';
 import { AcademyCategoriaModule } from './academy-categoria/academy-categoria.module';
+import { AcademyMatriculaModule } from './academy-matricula/academy-matricula.module';
+import { AcademyProgressoModule } from './academy-progresso/academy-progresso.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { AcademyCategoriaModule } from './academy-categoria/academy-categoria.mo
     FinanceAlertaModule,
     AcademyCursoModule,
     AcademyCategoriaModule,
+    AcademyMatriculaModule,
+    AcademyProgressoModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
