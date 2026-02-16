@@ -116,6 +116,12 @@ model Usuario {
   faturasCriadas            FinanceFatura[]            @relation("FaturaCriadaPor")
   anexosCriados             FinanceAnexo[]             @relation("AnexoCriadoPor")
 
+  // Academy - Relacionamentos
+  academyMatriculas    AcademyMatricula[]
+  academyCertificados  AcademyCertificado[]
+  academyAvaliacoes    AcademyAvaliacao[]
+  academyAnotacoes     AcademyAnotacao[]
+
   @@map("usuario")
 }
 
@@ -618,4 +624,265 @@ model FinanceAlerta {
   @@index([lido])
   @@index([tipo])
   @@map("finance_alertas")
+}
+
+// ============================================
+// 5. SISTEMA ACADEMY - EDUCAÇÃO E CURSOS
+// ============================================
+
+// Categorias de Cursos
+model AcademyCategoria {
+  id          Int      @id @default(autoincrement())
+  nome        String   @db.VarChar(100)    // "Contabilidade Básica", "Fiscal", "Trabalhista"
+  slug        String   @unique             // "contabilidade-basica"
+  descricao   String?  @db.Text
+  icone       String?  @db.VarChar(50)     // lucide icon name
+  cor         String?  @db.VarChar(20)     // hex color (#FF5733)
+  ordem       Int      @default(0)
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  cursos      AcademyCurso[]
+  
+  @@map("academy_categorias")
+}
+
+// Instrutores
+model AcademyInstrutor {
+  id              Int      @id @default(autoincrement())
+  nome            String   @db.VarChar(255)
+  email           String   @unique
+  biografia       String?  @db.Text
+  foto            String?  @db.Text            // URL da foto de perfil
+  especialidades  String?  @db.Text            // JSON array ["Fiscal", "Trabalhista"]
+  linkedin        String?  @db.VarChar(255)
+  website         String?  @db.VarChar(255)
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  cursos          AcademyCurso[]
+  aulas           AcademyAula[]
+  
+  @@map("academy_instrutores")
+}
+
+// Cursos
+model AcademyCurso {
+  id                  Int       @id @default(autoincrement())
+  categoriaId         Int       @map("categoria_id")
+  instrutorId         Int       @map("instrutor_id")
+  titulo              String    @db.VarChar(255)
+  slug                String    @unique
+  descricao           String?   @db.Text
+  descricaoCompleta   String?   @map("descricao_completa") @db.Text
+  thumbnail           String?   @db.Text           // URL da imagem de capa
+  videoIntro          String?   @map("video_intro") @db.Text // URL vídeo de introdução
+  duracao             Int?                         // duração total em minutos
+  nivel               String    @default("INICIANTE") // INICIANTE, INTERMEDIARIO, AVANCADO
+  preco               Decimal?  @db.Decimal(10, 2) // Se for pago (null = gratuito)
+  precoPromocional    Decimal?  @map("preco_promocional") @db.Decimal(10, 2)
+  gratuito            Boolean   @default(true)
+  certificado         Boolean   @default(true)     // Emite certificado?
+  cargaHoraria        Int?      @map("carga_horaria") // Horas para certificado
+  tags                String?   @db.Text           // JSON array ["contabilidade", "fiscal"]
+  objetivos           String?   @db.Text           // JSON array de objetivos do curso
+  requisitos          String?   @db.Text           // JSON array de pré-requisitos
+  oqueLearned         String?   @map("oque_learned") @db.Text // JSON array "O que você vai aprender"
+  totalAulas          Int       @default(0) @map("total_aulas")
+  totalAlunos         Int       @default(0) @map("total_alunos")
+  avaliacaoMedia      Decimal?  @default(0) @map("avaliacao_media") @db.Decimal(3, 2)
+  totalAvaliacoes     Int       @default(0) @map("total_avaliacoes")
+  publicado           Boolean   @default(false)
+  dataPublicacao      DateTime? @map("data_publicacao")
+  destaque            Boolean   @default(false)    // Curso em destaque na home
+  ativo               Boolean   @default(true)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  categoria           AcademyCategoria @relation(fields: [categoriaId], references: [id])
+  instrutor           AcademyInstrutor @relation(fields: [instrutorId], references: [id])
+  modulos             AcademyModulo[]
+  matriculas          AcademyMatricula[]
+  avaliacoes          AcademyAvaliacao[]
+  certificados        AcademyCertificado[]
+  
+  @@index([categoriaId])
+  @@index([instrutorId])
+  @@index([publicado])
+  @@index([slug])
+  @@map("academy_cursos")
+}
+
+// Módulos (Seções do curso)
+model AcademyModulo {
+  id          Int      @id @default(autoincrement())
+  cursoId     Int      @map("curso_id")
+  titulo      String   @db.VarChar(255)
+  descricao   String?  @db.Text
+  ordem       Int      @default(0)
+  duracao     Int?                     // duração total em minutos
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  curso       AcademyCurso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  aulas       AcademyAula[]
+  
+  @@index([cursoId])
+  @@index([cursoId, ordem])
+  @@map("academy_modulos")
+}
+
+// Aulas
+model AcademyAula {
+  id              Int      @id @default(autoincrement())
+  moduloId        Int      @map("modulo_id")
+  instrutorId     Int?     @map("instrutor_id")
+  titulo          String   @db.VarChar(255)
+  descricao       String?  @db.Text
+  tipo            String   @default("VIDEO")    // VIDEO, TEXTO, QUIZ, ARQUIVO, LIVE
+  conteudoUrl     String?  @map("conteudo_url") @db.Text // URL vídeo, documento, etc
+  conteudoTexto   String?  @map("conteudo_texto") @db.Text // Conteúdo em texto/markdown
+  duracao         Int?                           // duração em segundos
+  ordem           Int      @default(0)
+  gratuita        Boolean  @default(false)       // Aula liberada para preview
+  recursos        String?  @db.Text             // JSON array de materiais complementares
+  transcricao     String?  @db.Text             // Transcrição do vídeo
+  thumbnail       String?  @db.Text             // Thumbnail da aula
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  modulo          AcademyModulo @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  instrutor       AcademyInstrutor? @relation(fields: [instrutorId], references: [id])
+  progressos      AcademyProgresso[]
+  
+  @@index([moduloId])
+  @@index([moduloId, ordem])
+  @@map("academy_aulas")
+}
+
+// Matrículas
+model AcademyMatricula {
+  id              Int       @id @default(autoincrement())
+  usuarioId       Int       @map("usuario_id")
+  cursoId         Int       @map("curso_id")
+  status          String    @default("ATIVA")    // ATIVA, CONCLUIDA, CANCELADA, SUSPENSA
+  dataMatricula   DateTime  @default(now()) @map("data_matricula")
+  dataInicio      DateTime? @map("data_inicio")  // Quando começou a assistir primeira aula
+  dataConclusao   DateTime? @map("data_conclusao")
+  progressoGeral  Int       @default(0) @map("progresso_geral") // 0-100%
+  tempoAssistido  Int       @default(0) @map("tempo_assistido") // Total em segundos
+  ultimaAulaId    Int?      @map("ultima_aula_id") // ID da última aula assistida
+  favorito        Boolean   @default(false)      // Curso marcado como favorito
+  
+  // Relacionamentos
+  usuario         Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  curso           AcademyCurso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  progressos      AcademyProgresso[]
+  certificado     AcademyCertificado?
+  
+  @@unique([usuarioId, cursoId])
+  @@index([usuarioId])
+  @@index([cursoId])
+  @@index([usuarioId, status])
+  @@map("academy_matriculas")
+}
+
+// Progresso das Aulas
+model AcademyProgresso {
+  id              Int       @id @default(autoincrement())
+  matriculaId     Int       @map("matricula_id")
+  aulaId          Int       @map("aula_id")
+  concluido       Boolean   @default(false)
+  tempoAssistido  Int       @default(0) @map("tempo_assistido") // em segundos
+  ultimaPosicao   Int       @default(0) @map("ultima_posicao")  // posição do vídeo em segundos
+  dataInicio      DateTime? @map("data_inicio")
+  dataConclusao   DateTime? @map("data_conclusao")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  matricula       AcademyMatricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+  aula            AcademyAula @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  
+  @@unique([matriculaId, aulaId])
+  @@index([matriculaId])
+  @@index([aulaId])
+  @@map("academy_progressos")
+}
+
+// Certificados
+model AcademyCertificado {
+  id              Int      @id @default(autoincrement())
+  matriculaId     Int      @unique @map("matricula_id")
+  codigo          String   @unique        // CERT-2026-0001
+  usuarioId       Int      @map("usuario_id")
+  cursoId         Int      @map("curso_id")
+  dataEmissao     DateTime @default(now()) @map("data_emissao")
+  validadeInicio  DateTime @map("validade_inicio")
+  validadeFim     DateTime? @map("validade_fim")
+  cargaHoraria    Int      @map("carga_horaria")
+  notaFinal       Decimal? @map("nota_final") @db.Decimal(5, 2)
+  hashValidacao   String   @unique @map("hash_validacao") // Hash para validação pública
+  arquivoUrl      String?  @map("arquivo_url") @db.Text  // URL do PDF do certificado
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relacionamentos
+  matricula       AcademyMatricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+  usuario         Usuario @relation(fields: [usuarioId], references: [id])
+  curso           AcademyCurso @relation(fields: [cursoId], references: [id])
+  
+  @@index([usuarioId])
+  @@index([cursoId])
+  @@index([codigo])
+  @@index([hashValidacao])
+  @@map("academy_certificados")
+}
+
+// Avaliações dos Cursos
+model AcademyAvaliacao {
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int      @map("usuario_id")
+  cursoId     Int      @map("curso_id")
+  nota        Int                          // 1-5 estrelas
+  comentario  String?  @db.Text
+  aprovado    Boolean  @default(false)     // Moderação de comentários
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  curso       AcademyCurso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  
+  @@unique([usuarioId, cursoId])
+  @@index([cursoId])
+  @@index([aprovado])
+  @@map("academy_avaliacoes")
+}
+
+// Anotações dos Alunos
+model AcademyAnotacao {
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int      @map("usuario_id")
+  aulaId      Int      @map("aula_id")
+  conteudo    String   @db.Text
+  timestamp   Int?                        // Timestamp do vídeo em segundos
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  @@index([usuarioId])
+  @@index([aulaId])
+  @@map("academy_anotacoes")
 }

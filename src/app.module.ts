@@ -13,6 +13,8 @@ import { FinanceContaReceberModule } from './finance-conta-receber/finance-conta
 import { FinanceContaPagarModule } from './finance-conta-pagar/finance-conta-pagar.module';
 import { FinanceFaturaModule } from './finance-fatura/finance-fatura.module';
 import { FinanceAlertaModule } from './finance-alerta/finance-alerta.module';
+import { AcademyCursoModule } from './academy-curso/academy-curso.module';
+import { AcademyCategoriaModule } from './academy-categoria/academy-categoria.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { FinanceAlertaModule } from './finance-alerta/finance-alerta.module';
     FinanceContaPagarModule,
     FinanceFaturaModule,
     FinanceAlertaModule,
+    AcademyCursoModule,
+    AcademyCategoriaModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

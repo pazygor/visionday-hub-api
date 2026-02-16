@@ -7,6 +7,19 @@ async function main() {
   console.log('🌱 Iniciando seed do banco de dados...');
 
   // Limpar dados existentes (em ordem de dependência)
+  // Academy
+  await prisma.academyAnotacao.deleteMany();
+  await prisma.academyAvaliacao.deleteMany();
+  await prisma.academyCertificado.deleteMany();
+  await prisma.academyProgresso.deleteMany();
+  await prisma.academyMatricula.deleteMany();
+  await prisma.academyAula.deleteMany();
+  await prisma.academyModulo.deleteMany();
+  await prisma.academyCurso.deleteMany();
+  await prisma.academyInstrutor.deleteMany();
+  await prisma.academyCategoria.deleteMany();
+  
+  // Finance
   await prisma.financeAlerta.deleteMany();
   await prisma.financeConfiguracaoAlerta.deleteMany();
   await prisma.financeAnexo.deleteMany();
@@ -573,6 +586,524 @@ async function main() {
   console.log('   ✅ Configuração de alertas criada');
 
   // ============================================
+  // 9. ACADEMY - CATEGORIAS DE CURSOS
+  // ============================================
+  console.log('\n🎓 Criando dados do Academy...');
+  
+  const catContabilidadeBasica = await prisma.academyCategoria.create({
+    data: {
+      nome: 'Contabilidade Básica',
+      slug: 'contabilidade-basica',
+      descricao: 'Fundamentos essenciais da contabilidade',
+      icone: 'BookOpen',
+      cor: '#3B82F6',
+      ordem: 1,
+      ativo: true,
+    },
+  });
+
+  const catFiscal = await prisma.academyCategoria.create({
+    data: {
+      nome: 'Contabilidade Fiscal',
+      slug: 'contabilidade-fiscal',
+      descricao: 'Tributos, obrigações fiscais e legislação',
+      icone: 'FileText',
+      cor: '#EF4444',
+      ordem: 2,
+      ativo: true,
+    },
+  });
+
+  const catTrabalhista = await prisma.academyCategoria.create({
+    data: {
+      nome: 'Departamento Pessoal',
+      slug: 'departamento-pessoal',
+      descricao: 'Folha de pagamento e legislação trabalhista',
+      icone: 'Users',
+      cor: '#10B981',
+      ordem: 3,
+      ativo: true,
+    },
+  });
+
+  const catGerencial = await prisma.academyCategoria.create({
+    data: {
+      nome: 'Contabilidade Gerencial',
+      slug: 'contabilidade-gerencial',
+      descricao: 'Análise de custos e tomada de decisões',
+      icone: 'TrendingUp',
+      cor: '#8B5CF6',
+      ordem: 4,
+      ativo: true,
+    },
+  });
+
+  console.log(`   ✅ ${await prisma.academyCategoria.count()} categorias de cursos criadas`);
+
+  // ============================================
+  // 10. ACADEMY - INSTRUTORES
+  // ============================================
+  console.log('   Criando instrutores...');
+  
+  const instrutor1 = await prisma.academyInstrutor.create({
+    data: {
+      nome: 'Dr. Carlos Mendes',
+      email: 'carlos.mendes@visionday.com.br',
+      biografia: 'Contador com mais de 15 anos de experiência em contabilidade fiscal e tributária. Mestre em Ciências Contábeis pela USP.',
+      foto: 'https://randomuser.me/api/portraits/men/32.jpg',
+      especialidades: JSON.stringify(['Contabilidade Fiscal', 'Tributos', 'SPED']),
+      linkedin: 'linkedin.com/in/carlosmendes',
+      ativo: true,
+    },
+  });
+
+  const instrutor2 = await prisma.academyInstrutor.create({
+    data: {
+      nome: 'Profa. Ana Paula Silva',
+      email: 'ana.silva@visionday.com.br',
+      biografia: 'Especialista em Departamento Pessoal e legislação trabalhista. Professora universitária há 10 anos.',
+      foto: 'https://randomuser.me/api/portraits/women/44.jpg',
+      especialidades: JSON.stringify(['Departamento Pessoal', 'eSocial', 'Folha de Pagamento']),
+      linkedin: 'linkedin.com/in/anapaula',
+      ativo: true,
+    },
+  });
+
+  const instrutor3 = await prisma.academyInstrutor.create({
+    data: {
+      nome: 'Roberto Santos',
+      email: 'roberto.santos@visionday.com.br',
+      biografia: 'Contador e consultor empresarial. Especialista em contabilidade gerencial e análise de demonstrações financeiras.',
+      foto: 'https://randomuser.me/api/portraits/men/52.jpg',
+      especialidades: JSON.stringify(['Contabilidade Gerencial', 'Análise Financeira', 'Custos']),
+      linkedin: 'linkedin.com/in/robertosantos',
+      ativo: true,
+    },
+  });
+
+  console.log(`   ✅ ${await prisma.academyInstrutor.count()} instrutores criados`);
+
+  // ============================================
+  // 11. ACADEMY - CURSOS
+  // ============================================
+  console.log('   Criando cursos...');
+  
+  const curso1 = await prisma.academyCurso.create({
+    data: {
+      categoriaId: catContabilidadeBasica.id,
+      instrutorId: instrutor1.id,
+      titulo: 'Fundamentos da Contabilidade',
+      slug: 'fundamentos-da-contabilidade',
+      descricao: 'Aprenda os conceitos básicos e essenciais da contabilidade de forma prática e objetiva.',
+      descricaoCompleta: 'Este curso aborda os fundamentos da contabilidade, incluindo partidas dobradas, plano de contas, lançamentos contábeis e demonstrações financeiras básicas.',
+      thumbnail: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800',
+      duracao: 180,
+      nivel: 'INICIANTE',
+      gratuito: true,
+      certificado: true,
+      cargaHoraria: 3,
+      tags: JSON.stringify(['contabilidade', 'básico', 'iniciante', 'fundamentos']),
+      objetivos: JSON.stringify([
+        'Entender os princípios contábeis',
+        'Realizar lançamentos contábeis',
+        'Interpretar demonstrações financeiras',
+        'Aplicar partidas dobradas',
+      ]),
+      requisitos: JSON.stringify(['Nenhum conhecimento prévio necessário']),
+      oqueLearned: JSON.stringify([
+        'Princípios fundamentais da contabilidade',
+        'Sistema de partidas dobradas',
+        'Plano de contas e classificações',
+        'Lançamentos contábeis',
+        'Balanço patrimonial e DRE',
+      ]),
+      totalAulas: 12,
+      totalAlunos: 0,
+      avaliacaoMedia: 0,
+      totalAvaliacoes: 0,
+      publicado: true,
+      dataPublicacao: new Date(),
+      destaque: true,
+      ativo: true,
+    },
+  });
+
+  const curso2 = await prisma.academyCurso.create({
+    data: {
+      categoriaId: catFiscal.id,
+      instrutorId: instrutor1.id,
+      titulo: 'Contabilidade Fiscal e Tributária',
+      slug: 'contabilidade-fiscal-tributaria',
+      descricao: 'Domine os principais tributos e obrigações fiscais das empresas brasileiras.',
+      descricaoCompleta: 'Curso completo sobre contabilidade fiscal, abordando ICMS, IPI, PIS, COFINS, IRPJ, CSLL e principais obrigações acessórias.',
+      thumbnail: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800',
+      duracao: 360,
+      nivel: 'INTERMEDIARIO',
+      gratuito: false,
+      preco: 297.00,
+      certificado: true,
+      cargaHoraria: 6,
+      tags: JSON.stringify(['fiscal', 'tributos', 'impostos', 'SPED']),
+      objetivos: JSON.stringify([
+        'Dominar os principais tributos brasileiros',
+        'Entender regimes tributários',
+        'Conhecer obrigações acessórias',
+        'Trabalhar com SPED Fiscal',
+      ]),
+      requisitos: JSON.stringify(['Conhecimentos básicos de contabilidade']),
+      oqueLearned: JSON.stringify([
+        'Tributos federais, estaduais e municipais',
+        'Lucro Real, Presumido e Simples Nacional',
+        'SPED Fiscal e EFD-Contribuições',
+        'Planejamento tributário básico',
+        'Cálculo e apuração de tributos',
+      ]),
+      totalAulas: 24,
+      totalAlunos: 0,
+      avaliacaoMedia: 0,
+      totalAvaliacoes: 0,
+      publicado: true,
+      dataPublicacao: new Date(),
+      destaque: true,
+      ativo: true,
+    },
+  });
+
+  const curso3 = await prisma.academyCurso.create({
+    data: {
+      categoriaId: catTrabalhista.id,
+      instrutorId: instrutor2.id,
+      titulo: 'Departamento Pessoal Completo',
+      slug: 'departamento-pessoal-completo',
+      descricao: 'Do básico ao avançado em folha de pagamento, eSocial e legislação trabalhista.',
+      descricaoCompleta: 'Curso completo de Departamento Pessoal, abordando admissão, folha de pagamento, férias, rescisão, eSocial e legislação trabalhista atualizada.',
+      thumbnail: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800',
+      duracao: 480,
+      nivel: 'INTERMEDIARIO',
+      gratuito: false,
+      preco: 397.00,
+      certificado: true,
+      cargaHoraria: 8,
+      tags: JSON.stringify(['DP', 'folha', 'trabalhista', 'eSocial']),
+      objetivos: JSON.stringify([
+        'Realizar processos de admissão e rescisão',
+        'Calcular folha de pagamento',
+        'Dominar eSocial',
+        'Aplicar legislação trabalhista',
+      ]),
+      requisitos: JSON.stringify(['Conhecimentos básicos de legislação']),
+      oqueLearned: JSON.stringify([
+        'Admissão de colaboradores',
+        'Cálculo de folha de pagamento',
+        'Férias e 13º salário',
+        'Rescisão contratual',
+        'eSocial na prática',
+        'Direitos trabalhistas',
+      ]),
+      totalAulas: 32,
+      totalAlunos: 0,
+      avaliacaoMedia: 0,
+      totalAvaliacoes: 0,
+      publicado: true,
+      dataPublicacao: new Date(),
+      destaque: false,
+      ativo: true,
+    },
+  });
+
+  const curso4 = await prisma.academyCurso.create({
+    data: {
+      categoriaId: catGerencial.id,
+      instrutorId: instrutor3.id,
+      titulo: 'Análise de Demonstrações Financeiras',
+      slug: 'analise-demonstracoes-financeiras',
+      descricao: 'Aprenda a analisar e interpretar demonstrações financeiras para tomada de decisões.',
+      descricaoCompleta: 'Curso focado em análise financeira, abordando indicadores, índices de liquidez, rentabilidade, endividamento e análise vertical/horizontal.',
+      thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800',
+      duracao: 240,
+      nivel: 'AVANCADO',
+      gratuito: false,
+      preco: 247.00,
+      certificado: true,
+      cargaHoraria: 4,
+      tags: JSON.stringify(['análise', 'financeiro', 'gerencial', 'indicadores']),
+      objetivos: JSON.stringify([
+        'Interpretar demonstrações financeiras',
+        'Calcular e analisar indicadores',
+        'Realizar análise vertical e horizontal',
+        'Apoiar decisões gerenciais',
+      ]),
+      requisitos: JSON.stringify(['Conhecimentos intermediários de contabilidade']),
+      oqueLearned: JSON.stringify([
+        'Análise de Balanço Patrimonial e DRE',
+        'Índices de liquidez',
+        'Índices de rentabilidade',
+        'Índices de endividamento',
+        'Análise vertical e horizontal',
+        'Relatórios gerenciais',
+      ]),
+      totalAulas: 16,
+      totalAlunos: 0,
+      avaliacaoMedia: 0,
+      totalAvaliacoes: 0,
+      publicado: true,
+      dataPublicacao: new Date(),
+      destaque: false,
+      ativo: true,
+    },
+  });
+
+  const curso5 = await prisma.academyCurso.create({
+    data: {
+      categoriaId: catContabilidadeBasica.id,
+      instrutorId: instrutor3.id,
+      titulo: 'Excel para Contadores',
+      slug: 'excel-para-contadores',
+      descricao: 'Domine o Excel aplicado à contabilidade e finanças.',
+      descricaoCompleta: 'Curso prático de Excel focado em contadores, com fórmulas, tabelas dinâmicas, macros básicas e dashboards financeiros.',
+      thumbnail: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800',
+      duracao: 300,
+      nivel: 'INICIANTE',
+      gratuito: true,
+      certificado: true,
+      cargaHoraria: 5,
+      tags: JSON.stringify(['excel', 'ferramentas', 'produtividade', 'prático']),
+      objetivos: JSON.stringify([
+        'Dominar fórmulas essenciais',
+        'Criar tabelas dinâmicas',
+        'Automatizar tarefas',
+        'Desenvolver dashboards',
+      ]),
+      requisitos: JSON.stringify(['Conhecimentos básicos de informática']),
+      oqueLearned: JSON.stringify([
+        'Fórmulas e funções avançadas',
+        'Tabelas dinâmicas',
+        'Formatação condicional',
+        'Gráficos profissionais',
+        'Macros básicas',
+        'Dashboards financeiros',
+      ]),
+      totalAulas: 20,
+      totalAlunos: 0,
+      avaliacaoMedia: 0,
+      totalAvaliacoes: 0,
+      publicado: true,
+      dataPublicacao: new Date(),
+      destaque: true,
+      ativo: true,
+    },
+  });
+
+  console.log(`   ✅ ${await prisma.academyCurso.count()} cursos criados`);
+
+  // ============================================
+  // 12. ACADEMY - MÓDULOS E AULAS DO CURSO 1
+  // ============================================
+  console.log('   Criando módulos e aulas...');
+  
+  // Módulo 1 do Curso 1
+  const modulo1 = await prisma.academyModulo.create({
+    data: {
+      cursoId: curso1.id,
+      titulo: 'Introdução à Contabilidade',
+      descricao: 'Conceitos iniciais e história da contabilidade',
+      ordem: 1,
+      duracao: 45,
+      ativo: true,
+    },
+  });
+
+  await prisma.academyAula.createMany({
+    data: [
+      {
+        moduloId: modulo1.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Bem-vindo ao curso',
+        descricao: 'Apresentação do curso e metodologia',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 300,
+        ordem: 1,
+        gratuita: true,
+        ativo: true,
+      },
+      {
+        moduloId: modulo1.id,
+        instrutorId: instrutor1.id,
+        titulo: 'O que é Contabilidade?',
+        descricao: 'Definição, objetivos e importância da contabilidade',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 900,
+        ordem: 2,
+        gratuita: true,
+        ativo: true,
+      },
+      {
+        moduloId: modulo1.id,
+        instrutorId: instrutor1.id,
+        titulo: 'História da Contabilidade',
+        descricao: 'Evolução histórica da contabilidade',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 600,
+        ordem: 3,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo1.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Princípios Contábeis',
+        descricao: 'Os princípios fundamentais da contabilidade',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 1200,
+        ordem: 4,
+        gratuita: false,
+        ativo: true,
+      },
+    ],
+  });
+
+  // Módulo 2 do Curso 1
+  const modulo2 = await prisma.academyModulo.create({
+    data: {
+      cursoId: curso1.id,
+      titulo: 'Patrimônio e Plano de Contas',
+      descricao: 'Entendendo o patrimônio e estrutura de contas',
+      ordem: 2,
+      duracao: 60,
+      ativo: true,
+    },
+  });
+
+  await prisma.academyAula.createMany({
+    data: [
+      {
+        moduloId: modulo2.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Conceito de Patrimônio',
+        descricao: 'Ativo, Passivo e Patrimônio Líquido',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 1500,
+        ordem: 1,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo2.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Plano de Contas',
+        descricao: 'Estrutura e organização do plano de contas',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 1200,
+        ordem: 2,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo2.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Classificação de Contas',
+        descricao: 'Como classificar contas contábeis',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 900,
+        ordem: 3,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo2.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Exercícios Práticos',
+        descricao: 'Exercícios de fixação sobre patrimônio',
+        tipo: 'TEXTO',
+        conteudoTexto: '# Exercícios de Fixação\n\n1. Classifique as seguintes contas...',
+        duracao: 1200,
+        ordem: 4,
+        gratuita: false,
+        recursos: JSON.stringify([
+          { tipo: 'pdf', nome: 'Lista de Exercícios.pdf', url: '#' },
+          { tipo: 'pdf', nome: 'Gabarito.pdf', url: '#' },
+        ]),
+        ativo: true,
+      },
+    ],
+  });
+
+  // Módulo 3 do Curso 1
+  const modulo3 = await prisma.academyModulo.create({
+    data: {
+      cursoId: curso1.id,
+      titulo: 'Lançamentos Contábeis',
+      descricao: 'Débito, crédito e método das partidas dobradas',
+      ordem: 3,
+      duracao: 75,
+      ativo: true,
+    },
+  });
+
+  await prisma.academyAula.createMany({
+    data: [
+      {
+        moduloId: modulo3.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Sistema de Partidas Dobradas',
+        descricao: 'Fundamento do método de partidas dobradas',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 1800,
+        ordem: 1,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo3.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Débito e Crédito',
+        descricao: 'Entendendo débito e crédito na prática',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 1500,
+        ordem: 2,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo3.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Lançamentos Básicos',
+        descricao: 'Como realizar lançamentos contábeis',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 1200,
+        ordem: 3,
+        gratuita: false,
+        ativo: true,
+      },
+      {
+        moduloId: modulo3.id,
+        instrutorId: instrutor1.id,
+        titulo: 'Prática de Lançamentos',
+        descricao: 'Exercícios práticos de lançamentos',
+        tipo: 'VIDEO',
+        conteudoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        duracao: 2000,
+        ordem: 4,
+        gratuita: false,
+        ativo: true,
+      },
+    ],
+  });
+
+  console.log(`   ✅ ${await prisma.academyModulo.count()} módulos criados`);
+  console.log(`   ✅ ${await prisma.academyAula.count()} aulas criadas`);
+
+  // ============================================
   // RESUMO
   // ============================================
   console.log('\n' + '='.repeat(60));
@@ -594,6 +1125,13 @@ async function main() {
   console.log(`   - ${await prisma.financeCliente.count()} clientes`);
   console.log(`   - ${await prisma.financeFornecedor.count()} fornecedores`);
   console.log(`   - ${await prisma.financeConfiguracaoAlerta.count()} configurações de alerta`);
+  
+  console.log(`\n🎓 Academy:`);
+  console.log(`   - ${await prisma.academyCategoria.count()} categorias de cursos`);
+  console.log(`   - ${await prisma.academyInstrutor.count()} instrutores`);
+  console.log(`   - ${await prisma.academyCurso.count()} cursos`);
+  console.log(`   - ${await prisma.academyModulo.count()} módulos`);
+  console.log(`   - ${await prisma.academyAula.count()} aulas`);
   
   console.log('\n👤 Usuários de teste:');
   console.log('   1. Admin (acesso total):');
