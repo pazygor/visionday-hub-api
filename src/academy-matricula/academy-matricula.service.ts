@@ -10,7 +10,15 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateMatriculaDto, UpdateMatriculaDto, MatriculaStatsDto, ContinueWatchingDto } from './dto';
+import {
+  CreateMatriculaDto,
+  UpdateMatriculaDto,
+  MatriculaStatsDto,
+  ContinueWatchingDto,
+  DashboardStatsDto,
+  DashboardCourseDto,
+  RecommendedCourseDto,
+} from './dto';
 
 @Injectable()
 export class AcademyMatriculaService {
@@ -377,5 +385,168 @@ export class AcademyMatriculaService {
     }
 
     return matricula;
+  }
+
+  /**
+   * Dashboard: Estatísticas completas do usuário
+   */
+  async getDashboardStats(usuarioId: number): Promise<DashboardStatsDto> {
+    const stats = await this.getStats(usuarioId);
+    
+    const totalMatriculados = await this.prisma.academyMatricula.count({
+      where: { usuarioId },
+    });
+
+    return {
+      ...stats,
+      totalCursosMatriculados: totalMatriculados,
+    };
+  }
+
+  /**
+   * Dashboard: Cursos para continuar assistindo
+   */
+  async getDashboardContinueWatching(
+    usuarioId: number,
+    limit: number = 4,
+  ): Promise<DashboardCourseDto[]> {
+    const matriculas = await this.prisma.academyMatricula.findMany({
+      where: {
+        usuarioId,
+        status: 'ATIVA',
+        progressoGeral: {
+          gt: 0,
+          lt: 100,
+        },
+      },
+      include: {
+        curso: {
+          include: {
+            categoria: true,
+            instrutor: true,
+          },
+        },
+        progressos: {
+          orderBy: {
+            updatedAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        dataMatricula: 'desc',
+      },
+      take: limit,
+    });
+
+    return matriculas.map((m) => ({
+      matriculaId: m.id,
+      cursoId: m.cursoId,
+      cursoTitulo: m.curso.titulo,
+      cursoSlug: m.curso.slug,
+      cursoThumbnail: m.curso.thumbnail,
+      categoriaNome: m.curso.categoria?.nome || '',
+      instrutorNome: m.curso.instrutor?.nome || '',
+      progressoGeral: m.progressoGeral,
+      ultimaAulaId: m.ultimaAulaId,
+      dataUltimoAcesso: m.progressos[0]?.updatedAt || m.dataMatricula,
+    }));
+  }
+
+  /**
+   * Dashboard: Cursos recomendados
+   */
+  async getRecommendedCourses(usuarioId: number, limit: number = 4): Promise<RecommendedCourseDto[]> {
+    // Buscar categorias dos cursos que o usuário já fez
+    const matriculas = await this.prisma.academyMatricula.findMany({
+      where: { usuarioId },
+      include: {
+        curso: {
+          select: {
+            categoriaId: true,
+          },
+        },
+      },
+    });
+
+    const categoriaIds = [...new Set(matriculas.map((m) => m.curso.categoriaId))];
+
+    // IDs dos cursos já matriculados
+    const cursosMatriculadosIds = matriculas.map((m) => m.cursoId);
+
+    // Buscar cursos recomendados (mesma categoria, não matriculado, bem avaliados)
+    const cursos = await this.prisma.academyCurso.findMany({
+      where: {
+        publicado: true,
+        ativo: true,
+        id: {
+          notIn: cursosMatriculadosIds.length > 0 ? cursosMatriculadosIds : undefined,
+        },
+        ...(categoriaIds.length > 0 && {
+          categoriaId: {
+            in: categoriaIds,
+          },
+        }),
+      },
+      include: {
+        categoria: true,
+        instrutor: true,
+      },
+      orderBy: [
+        { avaliacaoMedia: 'desc' },
+        { totalAlunos: 'desc' },
+      ],
+      take: limit,
+    });
+
+    // Se não encontrar cursos nas categorias do usuário, buscar os mais populares
+    if (cursos.length === 0) {
+      const cursosPopulares = await this.prisma.academyCurso.findMany({
+        where: {
+          publicado: true,
+          ativo: true,
+          id: {
+            notIn: cursosMatriculadosIds.length > 0 ? cursosMatriculadosIds : undefined,
+          },
+        },
+        include: {
+          categoria: true,
+          instrutor: true,
+        },
+        orderBy: [
+          { totalAlunos: 'desc' },
+          { avaliacaoMedia: 'desc' },
+        ],
+        take: limit,
+      });
+
+      return cursosPopulares.map((c) => ({
+        id: c.id,
+        titulo: c.titulo,
+        slug: c.slug,
+        thumbnail: c.thumbnail,
+        nivel: c.nivel,
+        avaliacaoMedia: Number(c.avaliacaoMedia) || 0,
+        totalAlunos: c.totalAlunos,
+        categoriaNome: c.categoria?.nome || '',
+        instrutorNome: c.instrutor?.nome || '',
+        duracao: c.duracao,
+        preco: c.preco ? Number(c.preco) : null,
+      }));
+    }
+
+    return cursos.map((c) => ({
+      id: c.id,
+      titulo: c.titulo,
+      slug: c.slug,
+      thumbnail: c.thumbnail,
+      nivel: c.nivel,
+      avaliacaoMedia: Number(c.avaliacaoMedia) || 0,
+      totalAlunos: c.totalAlunos,
+      categoriaNome: c.categoria?.nome || '',
+      instrutorNome: c.instrutor?.nome || '',
+      duracao: c.duracao,
+      preco: c.preco ? Number(c.preco) : null,
+    }));
   }
 }

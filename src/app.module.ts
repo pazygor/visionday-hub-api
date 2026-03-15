@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
@@ -17,9 +19,14 @@ import { AcademyCursoModule } from './academy-curso/academy-curso.module';
 import { AcademyCategoriaModule } from './academy-categoria/academy-categoria.module';
 import { AcademyMatriculaModule } from './academy-matricula/academy-matricula.module';
 import { AcademyProgressoModule } from './academy-progresso/academy-progresso.module';
+import { AcademyCertificadoModule } from './academy-certificado/academy-certificado.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     AuthModule,
     UserModule,
     FinanceCategoriaModule,
@@ -35,6 +42,7 @@ import { AcademyProgressoModule } from './academy-progresso/academy-progresso.mo
     AcademyCategoriaModule,
     AcademyMatriculaModule,
     AcademyProgressoModule,
+    AcademyCertificadoModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

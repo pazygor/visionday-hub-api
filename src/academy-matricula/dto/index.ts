@@ -4,3 +4,4 @@
 
 export * from './create-matricula.dto';
 export * from './matricula-stats.dto';
+export * from './dashboard.dto';

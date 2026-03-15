@@ -8,8 +8,11 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AcademyCertificadoService } from '../academy-certificado/academy-certificado.service';
 import {
   UpdateProgressoDto,
   MarkAsCompleteDto,
@@ -21,7 +24,11 @@ import {
 
 @Injectable()
 export class AcademyProgressoService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => AcademyCertificadoService))
+    private certificadoService: AcademyCertificadoService,
+  ) {}
 
   /**
    * Atualizar ou criar progresso de uma aula
@@ -348,15 +355,28 @@ export class AcademyProgressoService {
       0,
     );
 
+    const statusAnterior = matricula.status;
+    const novoStatus = progressoGeral === 100 ? 'CONCLUIDA' : 'ATIVA';
+
     // Atualizar matrícula
     await this.prisma.academyMatricula.update({
       where: { id: matriculaId },
       data: {
         progressoGeral,
         tempoAssistido,
-        status: progressoGeral === 100 ? 'CONCLUIDA' : 'ATIVA',
+        status: novoStatus,
         dataConclusao: progressoGeral === 100 ? new Date() : null,
       },
     });
+
+    // Emitir certificado automaticamente se acabou de concluir
+    if (progressoGeral === 100 && statusAnterior !== 'CONCLUIDA') {
+      try {
+        await this.certificadoService.autoGenerate(matriculaId);
+      } catch (error) {
+        console.error('Erro ao gerar certificado automaticamente:', error);
+        // Não bloqueia o fluxo se houver erro na geração do certificado
+      }
+    }
   }
 }

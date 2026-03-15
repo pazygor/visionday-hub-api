@@ -124,4 +124,36 @@ export class AcademyMatriculaController {
     const usuarioId = req.user.id;
     return this.matriculaService.remove(+id, usuarioId);
   }
+
+  /**
+   * Dashboard: Estatísticas completas
+   * GET /academy/dashboard/stats
+   */
+  @Get('dashboard/stats')
+  getDashboardStats(@Request() req) {
+    const usuarioId = req.user.id;
+    return this.matriculaService.getDashboardStats(usuarioId);
+  }
+
+  /**
+   * Dashboard: Continuar assistindo
+   * GET /academy/dashboard/continue-watching
+   */
+  @Get('dashboard/continue-watching')
+  getDashboardContinueWatching(@Request() req, @Query('limit') limit?: string) {
+    const usuarioId = req.user.id;
+    const limitNumber = limit ? parseInt(limit, 10) : 4;
+    return this.matriculaService.getDashboardContinueWatching(usuarioId, limitNumber);
+  }
+
+  /**
+   * Dashboard: Cursos recomendados
+   * GET /academy/dashboard/recommended
+   */
+  @Get('dashboard/recommended')
+  getRecommendedCourses(@Request() req, @Query('limit') limit?: string) {
+    const usuarioId = req.user.id;
+    const limitNumber = limit ? parseInt(limit, 10) : 4;
+    return this.matriculaService.getRecommendedCourses(usuarioId, limitNumber);
+  }
 }
